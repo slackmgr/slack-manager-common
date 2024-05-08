@@ -11,6 +11,6 @@ type QueueItem struct {
 	ReceiveTimestamp  time.Time
 	VisibilityTimeout time.Duration
 	Body              string
-	Ack               func(ctx context.Context)
-	Extend            func(ctx context.Context)
+	Ack               func(ctx context.Context) error
+	Extend            func(ctx context.Context) error
 }

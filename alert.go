@@ -13,50 +13,102 @@ import (
 )
 
 var (
-	// SlackChannelIDOrNameRegex matches valid Slack channel IDs and channel names. Names are converted to IDs by the API.
-	SlackChannelIDOrNameRegex = regexp.MustCompile(`^[0-9a-zA-Z\-_]{1,80}$`)
-	iconRegex                 = regexp.MustCompile(`^:[^:]{1,50}:$`)
-	slackMentionRegex         = regexp.MustCompile(`^((<!here>)|(<!channel>)|(<@[^>\s]{1,100}>))$`)
-	maxTimestampAge           = 7 * 24 * time.Hour
+	// slackChannelIDOrNameRegex matches valid Slack channel IDs and channel names. Names are converted to IDs by the API.
+	slackChannelIDOrNameRegex = regexp.MustCompile(`^[0-9a-zA-Z\-_]{1,80}$`)
+
+	// iconRegex matches valid Slack icon emojis, on the format ':emoji:'.
+	iconRegex = regexp.MustCompile(`^:[^:]{1,50}:$`)
+
+	// slackMentionRegex matches valid Slack mentions, such as <!here>, <!channel> and <@U12345678>.
+	slackMentionRegex = regexp.MustCompile(`^((<!here>)|(<!channel>)|(<@[^>\s]{1,100}>))$`)
+
+	// maxTimestampAge is the maximum age of an alert timestamp. If the timestamp is older than this, it will be replaced with the current time.
+	maxTimestampAge = 7 * 24 * time.Hour
+
+	maxHeaderLength       = 130
+	maxFallbackTextLength = 150
+	maxTextLength         = 10000
+	maxAuthorLength       = 100
+	maxHostLength         = 100
+	maxFooterLength       = 300
 )
 
-// Alert represents a system alert/warning/info event
+// Alert represents a single alert that can be sent to the Slack Manager.
 type Alert struct {
-	Timestamp                 time.Time              `json:"timestamp"`
-	CorrelationID             string                 `json:"correlationId"`
-	Header                    string                 `json:"header"`
-	HeaderWhenResolved        string                 `json:"headerWhenResolved"`
-	Text                      string                 `json:"text"`
-	TextWhenResolved          string                 `json:"textWhenResolved"`
-	FallbackText              string                 `json:"fallbackText"`
-	Author                    string                 `json:"author"`
-	Host                      string                 `json:"host"`
-	Footer                    string                 `json:"footer"`
-	Link                      string                 `json:"link"`
-	AutoResolveSeconds        int                    `json:"autoResolveSeconds"`
-	AutoResolveAsInconclusive bool                   `json:"autoResolveAsInconclusive"`
-	Severity                  AlertSeverity          `json:"severity"`
-	SlackChannelID            string                 `json:"slackChannelId"`
-	RouteKey                  string                 `json:"routeKey"`
-	IssueFollowUpEnabled      bool                   `json:"issueFollowUpEnabled"`
-	Username                  string                 `json:"username"`
-	IconEmoji                 string                 `json:"iconEmoji"`
-	Fields                    []*Field               `json:"fields"`
-	NotificationDelaySeconds  int                    `json:"notificationDelaySeconds"`
-	ArchivingDelaySeconds     int                    `json:"archivingDelaySeconds"`
-	Escalation                []*Escalation          `json:"escalation"`
-	IgnoreIfTextContains      []string               `json:"ignoreIfTextContains"`
-	FailOnRateLimitError      bool                   `json:"failOnRateLimitError"`
-	Webhooks                  []*Webhook             `json:"webhooks"`
-	Metadata                  map[string]interface{} `json:"metadata"`
+	// Timestamp is the time when the alert was created. If the timestamp is empty (or older than 7 days), it will be replaced with the current time.
+	Timestamp time.Time `json:"timestamp"`
+
+	// CorrelationID is an optional field used to group related alerts together.
+	// If unset, the correlation ID is constructed by hashing [Header, Text, Author, Host, SlackChannelID].
+	// It is strongly recommended to set this to an explicit value, which makes sense in your context, rather than relying on the default hash value.
+	CorrelationID string `json:"correlationId"`
+
+	// Header is the main header (title) of the alert.
+	// It is automatically truncated to 130 characters.
+	// This field is optional, but Header and Text cannot both be empty.
+	Header string `json:"header"`
+
+	// HeaderWhenResolved is the main header (title) of the alert when in the *resolved* state.
+	// It is automatically truncated to 130 characters.
+	// This field is optional. If unset, the Header field is used for all alert states.
+	HeaderWhenResolved string `json:"headerWhenResolved"`
+
+	// Text is the main text (body) of the alert.
+	// It is automatically truncated to 10000 characters.
+	// This field is optional, but Header and Text cannot both be empty.
+	Text string `json:"text"`
+
+	// TextWhenResolved is the main text (body) of the alert when in the *resolved* state.
+	// It is automatically truncated to 10000 characters.
+	// This field is optional. If unset, the Text field is used for all alert states.
+	TextWhenResolved string `json:"textWhenResolved"`
+
+	// FallbackText is the text displayed in Slack notifications. It should be a short, human-readable summary of the alert, without markdown.
+	// It is automatically truncated to 150 characters.
+	// This field is optional. If unset, Slack decides what to display in notifications (which may not always be ideal).
+	FallbackText string `json:"fallbackText"`
+
+	// Author is the 'author' of the alert (if relevant), displayed as a context block in the Slack post.
+	// It is automatically truncated to 100 characters.
+	// This field is optional.
+	Author string `json:"author"`
+
+	// Host is the 'host' on which the alert originated (if any), displayed as a context block in the Slack post.
+	// It is automatically truncated to 100 characters.
+	// This field is optional.
+	Host                      string        `json:"host"`
+	Footer                    string        `json:"footer"`
+	Link                      string        `json:"link"`
+	AutoResolveSeconds        int           `json:"autoResolveSeconds"`
+	AutoResolveAsInconclusive bool          `json:"autoResolveAsInconclusive"`
+	Severity                  AlertSeverity `json:"severity"`
+	SlackChannelID            string        `json:"slackChannelId"`
+	RouteKey                  string        `json:"routeKey"`
+	IssueFollowUpEnabled      bool          `json:"issueFollowUpEnabled"`
+	Username                  string        `json:"username"`
+	IconEmoji                 string        `json:"iconEmoji"`
+
+	// Fields are rendered in a compact format that allows for 2 columns of side-by-side text.
+	Fields                   []*Field               `json:"fields"`
+	NotificationDelaySeconds int                    `json:"notificationDelaySeconds"`
+	ArchivingDelaySeconds    int                    `json:"archivingDelaySeconds"`
+	Escalation               []*Escalation          `json:"escalation"`
+	IgnoreIfTextContains     []string               `json:"ignoreIfTextContains"`
+	FailOnRateLimitError     bool                   `json:"failOnRateLimitError"`
+	Webhooks                 []*Webhook             `json:"webhooks"`
+	Metadata                 map[string]interface{} `json:"metadata"`
 }
 
-// Field represents a field in a Slack attachment. Keep the title and value short!
+// Field is an alert field.
 type Field struct {
+	// Title is the title of the field. It is automatically truncated to 30 characters.
 	Title string `json:"title"`
+
+	// Value is the value of the field. It is automatically truncated to 200 characters.
 	Value string `json:"value"`
 }
 
+// Escalation represents an escalation point for an alert.
 type Escalation struct {
 	Severity      AlertSeverity `json:"severity"`
 	DelaySeconds  int           `json:"delaySeconds"`
@@ -153,8 +205,8 @@ func (a *Alert) Clean() {
 	a.IconEmoji = strings.TrimSpace(a.IconEmoji)
 	a.Severity = AlertSeverity(strings.ToLower(strings.TrimSpace(string(a.Severity))))
 
-	if len(a.FallbackText) > 150 {
-		a.FallbackText = a.FallbackText[:147] + "..."
+	if len(a.FallbackText) > maxFallbackTextLength {
+		a.FallbackText = a.FallbackText[:maxFallbackTextLength-3] + "..."
 	}
 
 	if a.Severity == "critical" {
@@ -171,31 +223,31 @@ func (a *Alert) Clean() {
 
 	// Max length is 150, see https://api.slack.com/reference/block-kit/blocks#header
 	// We also need to leave some space for the :status: emoji to be replaced with something a bit longer
-	if len(a.Header) > 130 {
-		a.Header = strings.TrimSpace(a.Header[:127]) + "..."
+	if len(a.Header) > maxHeaderLength {
+		a.Header = strings.TrimSpace(a.Header[:maxHeaderLength-3]) + "..."
 	}
 
-	if len(a.HeaderWhenResolved) > 140 {
-		a.HeaderWhenResolved = strings.TrimSpace(a.HeaderWhenResolved[:137]) + "..."
+	if len(a.HeaderWhenResolved) > maxHeaderLength {
+		a.HeaderWhenResolved = strings.TrimSpace(a.HeaderWhenResolved[:maxHeaderLength-3]) + "..."
 	}
 
 	a.Text = shortenAlertTextIfNeeded(a.Text)
 	a.TextWhenResolved = shortenAlertTextIfNeeded(a.TextWhenResolved)
 
-	if len(a.Author) > 100 {
-		a.Author = strings.TrimSpace(a.Author[:97]) + "..."
+	if len(a.Author) > maxAuthorLength {
+		a.Author = strings.TrimSpace(a.Author[:maxAuthorLength-3]) + "..."
 	}
 
-	if len(a.Host) > 100 {
-		a.Host = strings.TrimSpace(a.Host[:97]) + "..."
+	if len(a.Host) > maxHostLength {
+		a.Host = strings.TrimSpace(a.Host[:maxHostLength-3]) + "..."
 	}
 
 	if len(a.Username) > 100 {
 		a.Username = strings.TrimSpace(a.Username[:97]) + "..."
 	}
 
-	if len(a.Footer) > 300 {
-		a.Footer = strings.TrimSpace(a.Footer[:297]) + "..."
+	if len(a.Footer) > maxFooterLength {
+		a.Footer = strings.TrimSpace(a.Footer[:maxFooterLength-3]) + "..."
 	}
 
 	for _, field := range a.Fields {
@@ -286,7 +338,7 @@ func (a *Alert) Validate() error {
 
 func (a *Alert) ValidateSlackChannelID() error {
 	if a.SlackChannelID != "" {
-		if !SlackChannelIDOrNameRegex.MatchString(a.SlackChannelID) {
+		if !slackChannelIDOrNameRegex.MatchString(a.SlackChannelID) {
 			return fmt.Errorf("slackChannelId '%s' is invalid", a.SlackChannelID)
 		}
 
@@ -583,7 +635,7 @@ func (a *Alert) ValidateEscalation() error {
 		}
 
 		if e.MoveToChannel != "" {
-			if !SlackChannelIDOrNameRegex.MatchString(e.MoveToChannel) {
+			if !slackChannelIDOrNameRegex.MatchString(e.MoveToChannel) {
 				return fmt.Errorf("escalation[%d].moveToChannel '%s' is invalid", index, e.MoveToChannel)
 			}
 		}
@@ -660,16 +712,15 @@ func (w *Webhook) DecryptPayload(key []byte) (map[string]interface{}, error) {
 }
 
 func shortenAlertTextIfNeeded(text string) string {
-	if len(text) <= 10000 {
+	if len(text) <= maxTextLength {
 		return text
 	}
 
 	endsWithCodeBlock := strings.HasSuffix(text, "```")
-	shortened := strings.TrimSpace(text[:9997]) + "..."
 
 	if endsWithCodeBlock {
-		shortened += "```"
+		return strings.TrimSpace(text[:maxTextLength-6]) + "...```"
 	}
 
-	return shortened
+	return strings.TrimSpace(text[:maxTextLength-3]) + "..."
 }

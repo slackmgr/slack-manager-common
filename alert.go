@@ -1,8 +1,6 @@
 package common
 
 import (
-	"encoding/base64"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"net/url"
@@ -63,7 +61,7 @@ type Alert struct {
 	// This field is optional. If unset, the Text field is used for all alert states.
 	TextWhenResolved string `json:"textWhenResolved"`
 
-	// FallbackText is the text displayed in Slack notifications. It should be a short, human-readable summary of the alert, without markdown.
+	// FallbackText is the text displayed in Slack notifications. It should be a short, human-readable summary of the alert, without markdown or line breaks.
 	// It is automatically truncated to 150 characters.
 	// This field is optional. If unset, Slack decides what to display in notifications (which may not always be ideal).
 	FallbackText string `json:"fallbackText"`
@@ -221,8 +219,8 @@ func (a *Alert) Clean() {
 		a.NotificationDelaySeconds = 0
 	}
 
-	// Max length is 150, see https://api.slack.com/reference/block-kit/blocks#header
-	// We also need to leave some space for the :status: emoji to be replaced with something a bit longer
+	// Max length in the Slack API is 150, see https://api.slack.com/reference/block-kit/blocks#header
+	// We also need to leave some space for the :status: emoji to be replaced with something a bit longer by the Slack Manager
 	if len(a.Header) > maxHeaderLength {
 		a.Header = strings.TrimSpace(a.Header[:maxHeaderLength-3]) + "..."
 	}
@@ -642,73 +640,6 @@ func (a *Alert) ValidateEscalation() error {
 	}
 
 	return nil
-}
-
-// EncryptPayload encrypts the existing payload and replaces it with an encrypted version
-func (w *Webhook) EncryptPayload(key []byte) error {
-	if w.Payload == nil || len(w.Payload) == 0 {
-		return nil
-	}
-
-	if len(key) != 32 {
-		return fmt.Errorf("encryption key length must be 32")
-	}
-
-	data, err := json.Marshal(w.Payload)
-	if err != nil {
-		return err
-	}
-
-	if len(data) > 2048 {
-		return fmt.Errorf("length of JSON serialized webhook payload is %d, expected <= 2048", len(data))
-	}
-
-	encryptedData, err := Encrypt(key, data)
-	if err != nil {
-		return err
-	}
-
-	w.Payload = map[string]interface{}{
-		"__encrypted_data": base64.StdEncoding.EncodeToString(encryptedData),
-	}
-
-	return nil
-}
-
-// DecryptPayload decrypts the encrypted payload (if any) and returns it, or nil if payload is empty.
-// It does not change state.
-func (w *Webhook) DecryptPayload(key []byte) (map[string]interface{}, error) {
-	if w.Payload == nil || len(w.Payload) == 0 {
-		return nil, nil
-	}
-
-	if len(key) != 32 {
-		return nil, fmt.Errorf("encryption key length must be 32")
-	}
-
-	encryptedDataBase64, dataFound := w.Payload["__encrypted_data"]
-
-	if !dataFound {
-		return nil, nil
-	}
-
-	encryptedData, err := base64.StdEncoding.DecodeString(encryptedDataBase64.(string))
-	if err != nil {
-		return nil, err
-	}
-
-	data, err := Decrypt(key, encryptedData)
-	if err != nil {
-		return nil, err
-	}
-
-	originalPayload := make(map[string]interface{})
-
-	if err := json.Unmarshal(data, &originalPayload); err != nil {
-		return nil, err
-	}
-
-	return originalPayload, nil
 }
 
 func shortenAlertTextIfNeeded(text string) string {

@@ -42,6 +42,11 @@ type Alert struct {
 	// It is strongly recommended to set this to an explicit value, which makes sense in your context, rather than relying on the default hash value.
 	CorrelationID string `json:"correlationId"`
 
+	// Type is the type of alert, such as 'compliance', 'security' or 'metrics'.
+	// It is primarily used for routing, when the alert RouteKey field is used (rather than SlackChannelID).
+	// This field is optional, and case-insensitive.
+	Type string `json:"type"`
+
 	// Header is the main header (title) of the alert.
 	// It is automatically truncated to 130 characters.
 	// This field is optional, but Header and Text cannot both be empty.
@@ -189,8 +194,9 @@ func (a *Alert) Clean() {
 		a.Timestamp = time.Now()
 	}
 
+	a.Type = strings.ToLower(strings.TrimSpace(a.Type))
 	a.SlackChannelID = strings.TrimSpace(a.SlackChannelID)
-	a.RouteKey = strings.TrimSpace(a.RouteKey)
+	a.RouteKey = strings.ToLower(strings.TrimSpace(a.RouteKey))
 	a.Header = strings.ReplaceAll(strings.TrimSpace(a.Header), "\n", " ")
 	a.HeaderWhenResolved = strings.ReplaceAll(strings.TrimSpace(a.HeaderWhenResolved), "\n", " ")
 	a.Text = strings.TrimSpace(a.Text)

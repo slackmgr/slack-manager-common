@@ -7,7 +7,7 @@ const (
 	// AlertPanic is used for panic situations (panic icon in Slack).
 	AlertPanic AlertSeverity = "panic"
 
-	// AlertError is used for error situations (red error icon in Slack).
+	// AlertError is used for error/critical situations (red error icon in Slack).
 	AlertError AlertSeverity = "error"
 
 	// AlertWarning is used for warning situations (yellow warning icon in Slack).

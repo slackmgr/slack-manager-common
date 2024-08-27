@@ -17,7 +17,7 @@ func TestInMemoryFifoQueue(t *testing.T) {
 		t.Parallel()
 
 		ctx := context.Background()
-		queue := common.NewInMemoryFifoQueue(2, time.Millisecond)
+		queue := common.NewInMemoryFifoQueue("alerts", 2, time.Millisecond)
 		err := queue.Send(ctx, "C000000001", "dedupID_1", "body_1")
 		require.NoError(t, err)
 		err = queue.Send(ctx, "C000000002", "dedupID_2", "body_2")
@@ -30,7 +30,7 @@ func TestInMemoryFifoQueue(t *testing.T) {
 		t.Parallel()
 
 		ctx, cancel := context.WithCancel(context.Background())
-		queue := common.NewInMemoryFifoQueue(1, time.Second)
+		queue := common.NewInMemoryFifoQueue("alerts", 1, time.Second)
 		err := queue.Send(ctx, "C000000001", "dedupID_1", "body_1")
 		require.NoError(t, err)
 		cancel()
@@ -43,7 +43,7 @@ func TestInMemoryFifoQueue(t *testing.T) {
 
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
-		queue := common.NewInMemoryFifoQueue(3, time.Millisecond)
+		queue := common.NewInMemoryFifoQueue("alerts", 3, time.Millisecond)
 		err := queue.Send(ctx, "C000000001", "dedupID_1", "body_1")
 		require.NoError(t, err)
 		err = queue.Send(ctx, "C000000002", "dedupID_2", "body_2")
@@ -81,7 +81,7 @@ func TestInMemoryFifoQueue(t *testing.T) {
 
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
-		queue := common.NewInMemoryFifoQueue(2, time.Second)
+		queue := common.NewInMemoryFifoQueue("alerts", 2, time.Second)
 		err := queue.Send(ctx, "C000000001", "dedupID_1", "body_1")
 		require.NoError(t, err)
 		err = queue.Send(ctx, "C000000002", "dedupID_2", "body_2")

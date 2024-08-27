@@ -11,20 +11,28 @@ import (
 // InMemoryFifoQueue is an in-memory FIFO queue implementation
 // For TEST purposes only! Do not use in production!
 type InMemoryFifoQueue struct {
+	name         string
 	items        chan *FifoQueueItem
 	writeTimeout time.Duration
 }
 
 // NewInMemoryFifoQueue creates a new InMemoryFifoQueue instance.
+// name is the name of the queue (for logging purposes only).
 // bufferSize is the maximum number of items that can be stored in the queue.
 // writeTimeout is the maximum time to wait for writing an item to the queue.
 //
 // For TEST purposes only! Do not use in production!
-func NewInMemoryFifoQueue(bufferSize int, writeTimeout time.Duration) *InMemoryFifoQueue {
+func NewInMemoryFifoQueue(name string, bufferSize int, writeTimeout time.Duration) *InMemoryFifoQueue {
 	return &InMemoryFifoQueue{
+		name:         name,
 		items:        make(chan *FifoQueueItem, bufferSize),
 		writeTimeout: writeTimeout,
 	}
+}
+
+// Name returns the name of the queue.
+func (q *InMemoryFifoQueue) Name() string {
+	return q.name
 }
 
 // Send sends a message to the queue.

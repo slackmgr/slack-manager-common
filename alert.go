@@ -3,6 +3,7 @@ package common
 import (
 	"crypto/sha256"
 	"encoding/base64"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/url"
@@ -262,8 +263,14 @@ func NewAlert(severity AlertSeverity) *Alert {
 	}
 }
 
+// DedupID returns the ID of the Alert (for database/storage purposes)
 func (a *Alert) DedupID() string {
 	return hash("alert", a.SlackChannelID, a.RouteKey, a.CorrelationID, a.Timestamp.Format(time.RFC3339Nano), a.Header, a.Text)
+}
+
+// TimestampStr returns the timestamp of the alert as a string in RFC3339Nano format
+func (a *Alert) TimestampStr() string {
+	return a.Timestamp.Format(time.RFC3339Nano)
 }
 
 func (a *Alert) Clean() {
@@ -747,6 +754,16 @@ func (a *Alert) ValidateEscalation() error {
 	}
 
 	return nil
+}
+
+func (a *Alert) MarshalJSON() ([]byte, error) {
+	type Alias Alert
+
+	return json.Marshal(&struct {
+		*Alias
+	}{
+		Alias: (*Alias)(a),
+	})
 }
 
 func shortenAlertTextIfNeeded(text string) string {

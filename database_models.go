@@ -28,6 +28,10 @@ type Issue interface {
 type MoveMapping interface {
 	json.Marshaler
 
+	// UniqueID returns a unique and deterministic ID for this move mapping, for database/storage purposes.
+	// The ID is based on the original channel and the correlation ID, and is base64 encoded to ensure it is safe for use in URLs and as a database key.
+	UniqueID() string
+
 	// GetCorrelationID returns the correlation ID that this move mapping is associated with.
 	// It is unique in a single channel, but not across all channels.
 	// It is not URL safe, and should thus be encoded before being used in URLs or as part of a database key.

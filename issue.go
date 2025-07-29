@@ -2,6 +2,12 @@ package common
 
 import "encoding/json"
 
+// Issue represents an issue in a Slack channel.
+// It is used to track alerts, their resolution status, and their association with Slack posts.
+//
+// The actual implementation of this interface is internal to the Slack Manager, and may change without notice.
+// The database implementation should only store a JSON representation of the issue, and should not depend
+// on any specific fields or structure of the issue.
 type Issue interface {
 	json.Marshaler
 
@@ -26,31 +32,4 @@ type Issue interface {
 	// The value may change over time as the issue is updated.
 	// If the issue has no current post, it returns an empty string.
 	CurrentPostID() string
-}
-
-type MoveMapping interface {
-	json.Marshaler
-
-	// ChannelID returns the Slack channel ID that this move mapping belongs to (i.e. the channel where the move was initiated).
-	ChannelID() string
-
-	// UniqueID returns a unique and deterministic ID for this move mapping, for database/storage purposes.
-	// The ID is based on the original channel and the correlation ID, and is base64 encoded to ensure it is safe for use in URLs and as a database key.
-	UniqueID() string
-
-	// GetCorrelationID returns the correlation ID that this move mapping is associated with.
-	// It is unique in a single channel, but not across all channels.
-	// It is not URL safe, and should thus be encoded before being used in URLs or as part of a database key.
-	GetCorrelationID() string
-}
-
-type ChannelProcessingState interface {
-	json.Marshaler
-
-	// ChannelID returns the Slack channel ID that this processing state belongs to.
-	ChannelID() string
-
-	// UniqueID returns a unique and deterministic ID for this processing state, for database/storage purposes.
-	// The ID is based on the channel ID and is base64 encoded to ensure it is safe for use in URLs and as a database key.
-	UniqueID() string
 }

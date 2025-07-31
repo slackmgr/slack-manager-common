@@ -35,11 +35,11 @@ func TestWebhookGetPayloadString(t *testing.T) {
 
 	var w *common.WebhookCallback
 	val := w.GetPayloadString("key")
-	assert.Equal(t, "", val)
+	assert.Empty(t, val)
 
 	w = &common.WebhookCallback{}
 	val = w.GetPayloadString("key")
-	assert.Equal(t, "", val)
+	assert.Empty(t, val)
 
 	w = &common.WebhookCallback{
 		Payload: map[string]interface{}{
@@ -50,7 +50,7 @@ func TestWebhookGetPayloadString(t *testing.T) {
 	assert.Equal(t, "value", val)
 
 	val = w.GetPayloadString("invalid")
-	assert.Equal(t, "", val)
+	assert.Empty(t, val)
 }
 
 func TestWebhookGetPayloadInt(t *testing.T) {

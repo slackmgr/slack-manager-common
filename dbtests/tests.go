@@ -20,27 +20,21 @@ func TestSaveAlert(t *testing.T, client common.DB) {
 	alert1 := newTestAlert("C0ABABABAB", ksuid.New().String())
 	alert2 := newTestAlert("C0ABABABAB", ksuid.New().String())
 
-	err := client.SaveAlert(ctx, "C0ABABABAB", alert1)
+	err := client.SaveAlert(ctx, alert1)
 	require.NoError(t, err, "failed to save alert1")
 
-	err = client.SaveAlert(ctx, "C0ABABABAB", alert2)
+	err = client.SaveAlert(ctx, alert2)
 	require.NoError(t, err, "failed to save alert2")
 
 	// Saving the same alert again should not fail
-	err = client.SaveAlert(ctx, "C0ABABABAB", alert1)
+	err = client.SaveAlert(ctx, alert1)
 	require.NoError(t, err, "failed to save alert1 again")
 
-	err = client.SaveAlert(ctx, "", alert2)
-	require.Error(t, err, "should fail to save alert2 with empty channel ID")
-
-	err = client.SaveAlert(ctx, "C0ABABABAB", nil)
+	err = client.SaveAlert(ctx, nil)
 	require.Error(t, err, "should fail to save nil alert")
-
-	err = client.SaveAlert(ctx, "foo", alert1)
-	require.Error(t, err, "should fail to save alert1 with invalid channel ID")
 }
 
-func TestSaveIssue(t *testing.T, client common.DB) {
+func TestSaveAndFindIssue(t *testing.T, client common.DB) {
 	ctx := context.Background()
 	channel := "C0ABABABAB"
 	require := require.New(t)
@@ -51,25 +45,35 @@ func TestSaveIssue(t *testing.T, client common.DB) {
 	alert2 := newTestAlert(channel, ksuid.New().String())
 	issue2 := newTestIssue(alert2, ksuid.New().String())
 
-	err := client.SaveIssue(ctx, channel, issue1)
+	err := client.SaveIssue(ctx, issue1)
 	require.NoError(err)
+	issueBody, err := client.GetIssue(ctx, issue1.ID)
+	require.NoError(err, "failed to get issue after saving")
+	require.NotNil(issueBody, "issue body should not be nil after saving")
+	foundIssue := testIssueFromJSON(issueBody)
+	assert.Equal(t, issue1.ID, foundIssue.ID, "issue ID should match after saving")
+	assert.Equal(t, issue1.SlackPostID, foundIssue.SlackPostID, "SlackPostID should match after saving")
 
-	err = client.SaveIssue(ctx, channel, issue2)
+	err = client.SaveIssue(ctx, issue2)
 	require.NoError(err)
 
 	// Saving the same issue again should update the existing issue
 	issue1.SlackPostID = ksuid.New().String() // Simulate a change in SlackPostID
-	err = client.SaveIssue(ctx, channel, issue1)
+	err = client.SaveIssue(ctx, issue1)
 	require.NoError(err)
+	issueBody, err = client.GetIssue(ctx, issue1.ID)
+	require.NoError(err, "failed to get issue after saving")
+	require.NotNil(issueBody, "issue body should not be nil after saving")
+	foundIssue = testIssueFromJSON(issueBody)
+	assert.Equal(t, issue1.ID, foundIssue.ID, "issue ID should match after saving")
+	assert.Equal(t, issue1.SlackPostID, foundIssue.SlackPostID, "SlackPostID should match after saving")
 
-	err = client.SaveIssue(ctx, "", issue2)
-	require.Error(err, "should fail to save issue with empty channel ID")
-
-	err = client.SaveIssue(ctx, channel, nil)
+	err = client.SaveIssue(ctx, nil)
 	require.Error(err, "should fail to save nil issue")
 
-	err = client.SaveIssue(ctx, "foo", issue1)
-	require.Error(err, "should fail to save issue with invalid channel ID")
+	// Try to get a non-existent issue
+	_, err = client.GetIssue(ctx, "non-existent-id")
+	require.Error(err, "should fail to get non-existent issue")
 }
 
 func TestFindOpenIssueByCorrelationID(t *testing.T, client common.DB) {
@@ -95,7 +99,7 @@ func TestFindOpenIssueByCorrelationID(t *testing.T, client common.DB) {
 	assert.Nil(issueBody, "should not find issue by correlation ID before saving")
 
 	// Save the issue
-	err = client.SaveIssue(ctx, channel, issue)
+	err = client.SaveIssue(ctx, issue)
 	require.NoError(err, "should not error when saving issue")
 
 	// Lookup by correlation ID after saving should return the issue
@@ -117,7 +121,7 @@ func TestFindOpenIssueByCorrelationID(t *testing.T, client common.DB) {
 	alertArchived := newTestAlert(channel, correlationIDArchived)
 	issueArchived := newTestIssue(alertArchived, ksuid.New().String())
 	issueArchived.Archived = true
-	err = client.SaveIssue(ctx, channel, issueArchived)
+	err = client.SaveIssue(ctx, issueArchived)
 	require.NoError(err, "should not error when saving archived issue")
 	id, issueBody, err = client.FindOpenIssueByCorrelationID(ctx, channel, correlationIDArchived)
 	require.NoError(err, "should not error when looking up archived issue by correlation ID")
@@ -148,7 +152,7 @@ func TestFindIssueBySlackPostID(t *testing.T, client common.DB) {
 	assert.Nil(issueBody)
 
 	// Save the issue
-	err = client.SaveIssue(ctx, channel, issue)
+	err = client.SaveIssue(ctx, issue)
 	require.NoError(err, "should not error when saving issue")
 
 	// Lookup by SlackPostID after saving should return the issue
@@ -168,7 +172,7 @@ func TestFindIssueBySlackPostID(t *testing.T, client common.DB) {
 	// Saving the same issue again should update the existing issue
 	newPostID := ksuid.New().String()
 	issue.SlackPostID = newPostID // Simulate a change in SlackPostID
-	err = client.SaveIssue(ctx, channel, issue)
+	err = client.SaveIssue(ctx, issue)
 	require.NoError(err, "should not error when updating issue with new SlackPostID")
 
 	// Lookup by old SlackPostID should return nil
@@ -200,7 +204,7 @@ func TestSaveIssues(t *testing.T, client common.DB) {
 	err = client.Init(ctx, true)
 	require.NoError(err, "should not error when initializing client")
 
-	err = client.SaveIssues(ctx, channel)
+	err = client.SaveIssues(ctx)
 	require.NoError(err, "should not error when updating with empty issues list")
 
 	issue1 := newTestIssue(newTestAlert(channel, ksuid.New().String()), ksuid.New().String())
@@ -208,7 +212,7 @@ func TestSaveIssues(t *testing.T, client common.DB) {
 	issue3 := newTestIssue(newTestAlert(channel, ksuid.New().String()), ksuid.New().String())
 
 	// Save the issues
-	err = client.SaveIssues(ctx, channel, issue1, issue2, issue3)
+	err = client.SaveIssues(ctx, issue1, issue2, issue3)
 	require.NoError(err, "should not error when saving multiple issues")
 
 	// Verify that the issues were saved correctly
@@ -236,7 +240,7 @@ func TestLoadOpenIssues(t *testing.T, client common.DB) {
 	issue3.Archived = true // Mark one issue as archived
 
 	// Save the issues
-	err = client.SaveIssues(ctx, channel, issue1, issue2, issue3)
+	err = client.SaveIssues(ctx, issue1, issue2, issue3)
 	require.NoError(err, "should not error when saving multiple issues")
 
 	// Verify that only open issues are loaded
@@ -247,7 +251,7 @@ func TestLoadOpenIssues(t *testing.T, client common.DB) {
 	issue1.Archived = true // Mark issue1 as archived
 	issue2.Archived = true // Mark issue2 as archived
 
-	err = client.SaveIssues(ctx, channel, issue1, issue2)
+	err = client.SaveIssues(ctx, issue1, issue2)
 	require.NoError(err, "should not error when updating issues to archived")
 
 	// Verify that no open issues are loaded after archiving all
@@ -277,11 +281,7 @@ func TestLoadOpenIssuesInChannel(t *testing.T, client common.DB) {
 	issue4.Archived = true // Mark one issue as archived
 
 	// Save the issues for channel1
-	err = client.SaveIssues(ctx, channel1, issue1, issue2)
-	require.NoError(err, "should not error when saving multiple issues")
-
-	// Save the issues for channel2
-	err = client.SaveIssues(ctx, channel2, issue3, issue4)
+	err = client.SaveIssues(ctx, issue1, issue2, issue3, issue4)
 	require.NoError(err, "should not error when saving multiple issues")
 
 	// Verify that only open issues are loaded for channel1
@@ -301,7 +301,7 @@ func TestLoadOpenIssuesInChannel(t *testing.T, client common.DB) {
 
 	// Verify that no open issues are loaded for channel2 after archiving all
 	issue3.Archived = true
-	err = client.SaveIssues(ctx, channel2, issue3)
+	err = client.SaveIssues(ctx, issue3)
 	require.NoError(err, "should not error when updating issue3 to archived")
 	issues, err = client.LoadOpenIssuesInChannel(ctx, channel2)
 	require.NoError(err, "should not error when loading open issues in channel2 after archiving")
@@ -318,7 +318,7 @@ func TestCreatingAndFindingMoveMappings(t *testing.T, client common.DB) {
 	targetChannelID := "C0ABABABAC"
 
 	moveMapping := newTestMoveMapping(correlationID, originalChannelID, targetChannelID)
-	err := client.SaveMoveMapping(ctx, originalChannelID, moveMapping)
+	err := client.SaveMoveMapping(ctx, moveMapping)
 	require.NoError(err, "should not error when creating move mapping")
 
 	// Verify that the move mapping was saved correctly
@@ -333,7 +333,7 @@ func TestCreatingAndFindingMoveMappings(t *testing.T, client common.DB) {
 	assert.Equal(moveMapping.Timestamp.Format(time.RFC3339Nano), foundMoveMapping.Timestamp.Format(time.RFC3339Nano), "timestamp should match")
 
 	moveMapping.TargetChannelID = "C0ABABABAD" // Simulate a change in target channel ID
-	err = client.SaveMoveMapping(ctx, originalChannelID, moveMapping)
+	err = client.SaveMoveMapping(ctx, moveMapping)
 	require.NoError(err, "should not error when updating existing move mapping")
 
 	// Verify that the move mapping was updated correctly
@@ -347,14 +347,8 @@ func TestCreatingAndFindingMoveMappings(t *testing.T, client common.DB) {
 	assert.Equal(moveMapping.CorrelationID, foundMoveMapping.CorrelationID, "correlation ID should still match after update")
 	assert.Equal(moveMapping.Timestamp.Format(time.RFC3339Nano), foundMoveMapping.Timestamp.Format(time.RFC3339Nano), "timestamp should still match after update")
 
-	err = client.SaveMoveMapping(ctx, "", moveMapping)
-	require.Error(err, "should fail to create move mapping with empty original channel ID")
-
-	err = client.SaveMoveMapping(ctx, originalChannelID, nil)
+	err = client.SaveMoveMapping(ctx, nil)
 	require.Error(err, "should fail to create move mapping with nil move mapping")
-
-	err = client.SaveMoveMapping(ctx, "foo", moveMapping)
-	require.Error(err, "should fail to create move mapping with invalid original channel ID")
 
 	_, err = client.FindMoveMapping(ctx, "", correlationID)
 	require.Error(err, "should fail to find move mapping with empty original channel ID")
@@ -382,7 +376,7 @@ func TestCreatingAndFindingChannelProcessingState(t *testing.T, client common.DB
 	state := common.NewChannelProcessingState(channelID)
 	state.LastProcessed = now
 
-	err := client.SaveChannelProcessingState(ctx, channelID, state)
+	err := client.SaveChannelProcessingState(ctx, state)
 	require.NoError(err, "should not error when saving channel processing state")
 
 	// Verify that the channel processing state was saved correctly
@@ -396,7 +390,7 @@ func TestCreatingAndFindingChannelProcessingState(t *testing.T, client common.DB
 	// Update the channel processing state
 	state.LastProcessed = now.Add(5 * time.Minute)
 
-	err = client.SaveChannelProcessingState(ctx, channelID, state)
+	err = client.SaveChannelProcessingState(ctx, state)
 	require.NoError(err, "should not error when updating channel processing state")
 	foundState, err = client.FindChannelProcessingState(ctx, channelID)
 	require.NoError(err, "should not error when finding updated channel processing state")

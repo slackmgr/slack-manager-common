@@ -18,8 +18,8 @@ type ChannelProcessingState struct {
 func NewChannelProcessingState(channelID string) *ChannelProcessingState {
 	return &ChannelProcessingState{
 		ChannelID:     channelID,
-		Created:       time.Now(),
-		LastProcessed: time.Time{},
+		Created:       time.Now().UTC(),
+		LastProcessed: time.Time{}.UTC(),
 	}
 }
 

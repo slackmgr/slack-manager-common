@@ -1,7 +1,6 @@
 package common
 
 import (
-	"encoding/json"
 	"time"
 )
 
@@ -21,12 +20,4 @@ func NewChannelProcessingState(channelID string) *ChannelProcessingState {
 		Created:       time.Now().UTC(),
 		LastProcessed: time.Time{}.UTC(),
 	}
-}
-
-func (c ChannelProcessingState) MarshalBinary() ([]byte, error) {
-	return json.Marshal(c)
-}
-
-func (c *ChannelProcessingState) UnmarshalBinary(data []byte) error {
-	return json.Unmarshal(data, c)
 }

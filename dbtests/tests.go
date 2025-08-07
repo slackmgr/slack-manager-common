@@ -427,6 +427,38 @@ func TestCreatingAndFindingMoveMappings(t *testing.T, client common.DB) {
 	assert.Nil(moveMappingBody, "should not find move mapping with invalid correlation ID")
 }
 
+func TestDeletingMoveMappings(t *testing.T, client common.DB) {
+	ctx := context.Background()
+	assert := assert.New(t)
+	require := require.New(t)
+
+	correlationID := ksuid.New().String()
+	originalChannelID := "C0ABABABAB"
+	targetChannelID := "C0ABABABAC"
+
+	moveMapping := newTestMoveMapping(correlationID, originalChannelID, targetChannelID)
+	err := client.SaveMoveMapping(ctx, moveMapping)
+	require.NoError(err, "should not error when creating move mapping")
+
+	// Verify that the move mapping was saved correctly
+	moveMappingBody, err := client.FindMoveMapping(ctx, originalChannelID, correlationID)
+	require.NoError(err, "should not error when finding move mapping")
+	assert.NotNil(moveMappingBody, "should find move mapping after saving")
+
+	// Delete the move mapping
+	err = client.DeleteMoveMapping(ctx, originalChannelID, correlationID)
+	require.NoError(err, "should not error when deleting move mapping")
+
+	// Verify that the move mapping was deleted
+	moveMappingBody, err = client.FindMoveMapping(ctx, originalChannelID, correlationID)
+	require.NoError(err, "should not error when finding deleted move mapping")
+	assert.Nil(moveMappingBody, "should not find move mapping after deletion")
+
+	// Attempt to delete a non-existent move mapping should not error
+	err = client.DeleteMoveMapping(ctx, originalChannelID, correlationID)
+	require.NoError(err, "should not error when deleting non-existent move mapping")
+}
+
 func TestCreatingAndFindingChannelProcessingState(t *testing.T, client common.DB) {
 	ctx := context.Background()
 	assert := assert.New(t)

@@ -56,6 +56,9 @@ type DB interface {
 	// The database implementation should return an error if the query matches multiple mappings, and [nil, nil] if no mapping is found.
 	FindMoveMapping(ctx context.Context, channelID, correlationID string) (json.RawMessage, error)
 
+	// DeleteMoveMapping deletes a single move mapping from the database, for the specified channel ID and correlation ID.
+	DeleteMoveMapping(ctx context.Context, channelID, correlationID string) error
+
 	// SaveChannelProcessingState creates or updates a single channel processing state in the database.
 	SaveChannelProcessingState(ctx context.Context, state *ChannelProcessingState) error
 

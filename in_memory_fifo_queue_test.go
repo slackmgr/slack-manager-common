@@ -71,9 +71,6 @@ func TestInMemoryFifoQueue(t *testing.T) {
 		assert.Equal(t, "body_1", result[0].Body)
 		assert.Equal(t, "body_2", result[1].Body)
 		assert.Equal(t, "body_3", result[2].Body)
-
-		require.NoError(t, result[0].Ack(context.Background()))
-		assert.Nil(t, result[0].ExtendVisibility)
 	})
 
 	t.Run("receive function should react to context cancelled when waiting to write to sinkCh", func(t *testing.T) {

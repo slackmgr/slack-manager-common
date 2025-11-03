@@ -39,15 +39,11 @@ func (q *InMemoryFifoQueue) Name() string {
 // An error is returned if the context is canceled or the write timeout is reached.
 func (q *InMemoryFifoQueue) Send(ctx context.Context, slackChannelID, _, body string) error {
 	item := &FifoQueueItem{
-		MessageID:         uuid.New().String(),
-		SlackChannelID:    slackChannelID,
-		ReceiveTimestamp:  time.Now(),
-		VisibilityTimeout: 0,
-		Body:              body,
-		Ack: func(_ context.Context) error {
-			return nil
-		},
-		ExtendVisibility: nil, // Message visibility extension is not supported in this implementation
+		MessageID:        uuid.New().String(),
+		SlackChannelID:   slackChannelID,
+		ReceiveTimestamp: time.Now(),
+		Body:             body,
+		Ack:              func(_ context.Context) {},
 	}
 
 	select {

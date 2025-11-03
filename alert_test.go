@@ -71,7 +71,7 @@ func TestAlertDedupID(t *testing.T) {
 			Header:         "header",
 			Text:           "text",
 		}
-		expected := hash("alert", "C12345678", "foo", "bar", timestamp.Format(time.RFC3339Nano), "header", "text")
+		expected := hash("alert", "C12345678", "foo", "bar", timestamp.UTC().Format(time.RFC3339Nano), "header", "text")
 		assert.Equal(t, expected, a.UniqueID())
 	})
 }

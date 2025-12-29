@@ -2,7 +2,6 @@ package common_test
 
 import (
 	"testing"
-	"time"
 
 	common "github.com/peteraglen/slack-manager-common"
 )
@@ -10,8 +9,15 @@ import (
 func TestNoopMetrics(t *testing.T) {
 	t.Parallel()
 
-	m := &common.NoopMetrics{}
+	// Ensure NoopMetrics implements the Metrics interface
+	var m common.Metrics = &common.NoopMetrics{}
+
+	// Ensure methods can be called without errors or panics
 	m.RegisterCounter("", "")
-	m.AddToCounter("", 0)
-	m.AddHTTPRequestMetric("", "", 0, time.Second)
+	m.RegisterGauge("", "")
+	m.RegisterHistogram("", "", []float64{})
+	m.Add("", 0)
+	m.Inc("", "")
+	m.Set("", 0)
+	m.Observe("", 0)
 }

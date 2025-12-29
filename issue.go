@@ -7,7 +7,7 @@ import "encoding/json"
 //
 // The actual implementation of this interface is internal to the Slack Manager, and may change without notice.
 // The database implementation should only store a JSON representation of the issue, and should not depend
-// on any specific fields or structure of the issue.
+// on any specific fields or structures of the issue.
 type Issue interface {
 	json.Marshaler
 

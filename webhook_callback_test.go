@@ -19,7 +19,7 @@ func TestWebhookGetPayloadValue(t *testing.T) {
 	assert.Empty(t, val)
 
 	w = &common.WebhookCallback{
-		Payload: map[string]interface{}{
+		Payload: map[string]any{
 			"key": "value",
 		},
 	}
@@ -42,7 +42,7 @@ func TestWebhookGetPayloadString(t *testing.T) {
 	assert.Empty(t, val)
 
 	w = &common.WebhookCallback{
-		Payload: map[string]interface{}{
+		Payload: map[string]any{
 			"key": "value",
 		},
 	}
@@ -65,7 +65,7 @@ func TestWebhookGetPayloadInt(t *testing.T) {
 	assert.Equal(t, 42, val)
 
 	w = &common.WebhookCallback{
-		Payload: map[string]interface{}{
+		Payload: map[string]any{
 			"key": 123,
 		},
 	}
@@ -88,7 +88,7 @@ func TestWebhookGetPayloadBool(t *testing.T) {
 	assert.True(t, val)
 
 	w = &common.WebhookCallback{
-		Payload: map[string]interface{}{
+		Payload: map[string]any{
 			"key": true,
 		},
 	}

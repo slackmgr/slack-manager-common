@@ -3,18 +3,18 @@ package common
 import "time"
 
 type WebhookCallback struct {
-	ID            string                 `json:"id"`
-	UserID        string                 `json:"userId"`
-	UserRealName  string                 `json:"userRealName"`
-	ChannelID     string                 `json:"channelId"`
-	MessageID     string                 `json:"messageId"`
-	Timestamp     time.Time              `json:"timestamp"`
-	Input         map[string]string      `json:"input"`
-	CheckboxInput map[string][]string    `json:"checkboxInput"`
-	Payload       map[string]interface{} `json:"payload"`
+	ID            string              `json:"id"`
+	UserID        string              `json:"userId"`
+	UserRealName  string              `json:"userRealName"`
+	ChannelID     string              `json:"channelId"`
+	MessageID     string              `json:"messageId"`
+	Timestamp     time.Time           `json:"timestamp"`
+	Input         map[string]string   `json:"input"`
+	CheckboxInput map[string][]string `json:"checkboxInput"`
+	Payload       map[string]any      `json:"payload"`
 }
 
-func (w *WebhookCallback) GetPayloadValue(key string) interface{} {
+func (w *WebhookCallback) GetPayloadValue(key string) any {
 	if w == nil || w.Payload == nil {
 		return ""
 	}

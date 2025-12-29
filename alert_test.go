@@ -767,7 +767,7 @@ func TestAlertValidation(t *testing.T) {
 		require.ErrorContains(t, a.Validate(), "webhook[0].displayMode 'foo' is not valid")
 
 		// Max payload size is 50
-		a = &common.Alert{Header: "a", RouteKey: "b", Webhooks: []*common.Webhook{{ID: "foo", URL: "http://foo.bar", ButtonText: "press me", Payload: map[string]interface{}{}}}}
+		a = &common.Alert{Header: "a", RouteKey: "b", Webhooks: []*common.Webhook{{ID: "foo", URL: "http://foo.bar", ButtonText: "press me", Payload: map[string]any{}}}}
 		for i := 1; i <= 51; i++ {
 			a.Webhooks[0].Payload[randString(10, randGen)] = randString(10, randGen)
 		}

@@ -161,12 +161,12 @@ type Alert struct {
 	// ArchivingDelaySeconds is the number of seconds to wait before archiving the issue, after it is resolved.
 	// A non-archived issue is re-opened if a new alert with the same CorrelationID is received, and the same Slack post is updated.
 	// An archived can never be re-opened, and any new alerts with the same CorrelationID will generate a new issue and new Slack post.
-	ArchivingDelaySeconds int                    `json:"archivingDelaySeconds"`
-	Escalation            []*Escalation          `json:"escalation"`
-	IgnoreIfTextContains  []string               `json:"ignoreIfTextContains"`
-	FailOnRateLimitError  bool                   `json:"failOnRateLimitError"`
-	Webhooks              []*Webhook             `json:"webhooks"`
-	Metadata              map[string]interface{} `json:"metadata"`
+	ArchivingDelaySeconds int            `json:"archivingDelaySeconds"`
+	Escalation            []*Escalation  `json:"escalation"`
+	IgnoreIfTextContains  []string       `json:"ignoreIfTextContains"`
+	FailOnRateLimitError  bool           `json:"failOnRateLimitError"`
+	Webhooks              []*Webhook     `json:"webhooks"`
+	Metadata              map[string]any `json:"metadata"`
 }
 
 // Field is an alert field.
@@ -202,7 +202,7 @@ type Webhook struct {
 	ButtonStyle      WebhookButtonStyle       `json:"buttonStyle"`
 	AccessLevel      WebhookAccessLevel       `json:"accessLevel"`
 	DisplayMode      WebhookDisplayMode       `json:"displayMode"`
-	Payload          map[string]interface{}   `json:"payload"`
+	Payload          map[string]any           `json:"payload"`
 	PlainTextInput   []*WebhookPlainTextInput `json:"plainTextInput"`
 	CheckboxInput    []*WebhookCheckboxInput  `json:"checkboxInput"`
 }

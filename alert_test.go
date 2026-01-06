@@ -4,6 +4,7 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"math/rand"
+	"strings"
 	"testing"
 	"time"
 
@@ -79,7 +80,7 @@ func TestAlertDedupID(t *testing.T) {
 func TestAlertClean(t *testing.T) {
 	t.Parallel()
 
-	randGen := rand.New(rand.NewSource(time.Now().UnixNano()))
+	var randGen *rand.Rand // nil, randString creates its own thread-safe source
 
 	t.Run("timestamp common.newer than 7 days is kept", func(t *testing.T) {
 		t.Parallel()
@@ -459,7 +460,7 @@ func TestAlertClean(t *testing.T) {
 func TestAlertValidation(t *testing.T) {
 	t.Parallel()
 
-	randGen := rand.New(rand.NewSource(time.Now().UnixNano()))
+	var randGen *rand.Rand // nil, randString creates its own thread-safe source
 
 	t.Run("valid minimum common.alert", func(t *testing.T) {
 		t.Parallel()
@@ -939,12 +940,143 @@ func TestAlertValidation(t *testing.T) {
 	})
 }
 
+func TestAlertCleanUnicodeTruncation(t *testing.T) {
+	t.Parallel()
+
+	// Use a multi-byte UTF-8 character (Japanese "sun" character, 3 bytes per rune)
+	multiByteChar := "\u65e5" // 日
+
+	t.Run("header with unicode should truncate by rune count not bytes", func(t *testing.T) {
+		t.Parallel()
+
+		// Create a string of 131 Japanese characters (393 bytes)
+		header := strings.Repeat(multiByteChar, 131)
+		a := common.Alert{Header: header}
+		a.Clean()
+
+		// Should truncate to 127 runes + "..." = 130 runes total
+		assert.Len(t, []rune(a.Header), 130)
+		assert.True(t, strings.HasSuffix(a.Header, "..."))
+	})
+
+	t.Run("text with unicode should truncate safely", func(t *testing.T) {
+		t.Parallel()
+
+		// Create text longer than MaxTextLength with multi-byte characters (10002 runes)
+		text := strings.Repeat(multiByteChar, 10001)
+		a := common.Alert{Text: text}
+		a.Clean()
+
+		// Should be exactly MaxTextLength runes
+		assert.Len(t, []rune(a.Text), common.MaxTextLength)
+		assert.True(t, strings.HasSuffix(a.Text, "..."))
+	})
+
+	t.Run("fallbackText with unicode should truncate safely", func(t *testing.T) {
+		t.Parallel()
+
+		fallback := strings.Repeat(multiByteChar, 151)
+		a := common.Alert{FallbackText: fallback}
+		a.Clean()
+
+		assert.Len(t, []rune(a.FallbackText), common.MaxFallbackTextLength)
+		assert.True(t, strings.HasSuffix(a.FallbackText, "..."))
+	})
+
+	t.Run("field title with unicode should truncate safely", func(t *testing.T) {
+		t.Parallel()
+
+		title := strings.Repeat(multiByteChar, 31)
+		a := common.Alert{
+			Fields: []*common.Field{{Title: title, Value: "test"}},
+		}
+		a.Clean()
+
+		assert.Len(t, []rune(a.Fields[0].Title), common.MaxFieldTitleLength)
+		assert.True(t, strings.HasSuffix(a.Fields[0].Title, "..."))
+	})
+
+	t.Run("field value with unicode should truncate safely", func(t *testing.T) {
+		t.Parallel()
+
+		value := strings.Repeat(multiByteChar, 201)
+		a := common.Alert{
+			Fields: []*common.Field{{Title: "test", Value: value}},
+		}
+		a.Clean()
+
+		assert.Len(t, []rune(a.Fields[0].Value), common.MaxFieldValueLength)
+		assert.True(t, strings.HasSuffix(a.Fields[0].Value, "..."))
+	})
+}
+
+func TestAlertCleanNilElements(t *testing.T) {
+	t.Parallel()
+
+	t.Run("nil field element should not panic", func(t *testing.T) {
+		t.Parallel()
+
+		a := common.Alert{
+			Fields: []*common.Field{nil, {Title: "test", Value: "value"}, nil},
+		}
+		assert.NotPanics(t, func() { a.Clean() })
+		assert.Equal(t, "test", a.Fields[1].Title)
+	})
+
+	t.Run("nil webhook element should not panic", func(t *testing.T) {
+		t.Parallel()
+
+		a := common.Alert{
+			Webhooks: []*common.Webhook{nil, {ID: "test", URL: "http://test.com", ButtonText: "click"}},
+		}
+		assert.NotPanics(t, func() { a.Clean() })
+		assert.Equal(t, "test", a.Webhooks[1].ID)
+	})
+
+	t.Run("nil plainTextInput element should not panic", func(t *testing.T) {
+		t.Parallel()
+
+		a := common.Alert{
+			Webhooks: []*common.Webhook{
+				{
+					ID:         "test",
+					URL:        "http://test.com",
+					ButtonText: "click",
+					PlainTextInput: []*common.WebhookPlainTextInput{
+						nil,
+						{ID: "input1", Description: "desc"},
+					},
+				},
+			},
+		}
+		assert.NotPanics(t, func() { a.Clean() })
+		assert.Equal(t, "input1", a.Webhooks[0].PlainTextInput[1].ID)
+	})
+
+	t.Run("nil escalation element should not panic", func(t *testing.T) {
+		t.Parallel()
+
+		a := common.Alert{
+			Escalation: []*common.Escalation{
+				nil,
+				{DelaySeconds: 60, Severity: common.AlertError, MoveToChannel: "  c12345  "},
+				nil,
+			},
+		}
+		assert.NotPanics(t, func() { a.Clean() })
+		assert.Equal(t, "C12345", a.Escalation[2].MoveToChannel) // nil elements sorted to front
+	})
+}
+
 var testLetters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
 
-func randString(n int, randGen *rand.Rand) string {
+// randString generates a random string of n characters.
+// Each call creates its own random source to be safe for concurrent use in parallel tests.
+func randString(n int, _ *rand.Rand) string {
+	localRand := rand.New(rand.NewSource(time.Now().UnixNano()))
 	b := make([]rune, n)
 	for i := range b {
-		b[i] = testLetters[randGen.Intn(len(testLetters))]
+		b[i] = testLetters[localRand.Intn(len(testLetters))]
 	}
 	return string(b)
 }
@@ -952,8 +1084,11 @@ func randString(n int, randGen *rand.Rand) string {
 func hash(input ...string) string {
 	h := sha256.New()
 
+	delimiter := []byte{0}
+
 	for _, s := range input {
 		h.Write([]byte(s))
+		h.Write(delimiter)
 	}
 
 	bs := h.Sum(nil)

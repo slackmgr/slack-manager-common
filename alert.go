@@ -10,6 +10,7 @@ import (
 	"sort"
 	"strings"
 	"time"
+	"unicode/utf8"
 )
 
 var (
@@ -135,12 +136,16 @@ type Alert struct {
 	// SlackChannelID is the ID of the Slack channel where the alert should be posted.
 	// Slack channel names are also accepted, and are automatically converted to channel IDs by the API.
 	// The value must be an existing channel ID or name, and the Slack Manager integration must have been added to the channel.
-	// This field is optional, but SlackChannelID and RouteKey cannot both be empty.
+	// This field is optional.
+	// If both SlackChannelID and RouteKey are set, SlackChannelID takes precedence.
+	// If both SlackChannelID and RouteKey are empty, the API will still accept the alert IF a fallback mapping exists. Otherwise, it will return an error.
 	SlackChannelID string `json:"slackChannelId"`
 
 	// RouteKey is the case-insensitive route key of the alert, used for routing to the correct Slack channel by the API.
 	// The API will return an error if the route key does not match any configured route.
-	// This field is ignored if SlackChannelID is set.
+	// This field is optional.
+	// If both SlackChannelID and RouteKey are set, SlackChannelID takes precedence.
+	// If both SlackChannelID and RouteKey are empty, the API will still accept the alert IF a fallback mapping exists. Otherwise, it will return an error.
 	RouteKey string `json:"routeKey"`
 
 	// Username is the username that the alert should be posted as in Slack.
@@ -291,8 +296,8 @@ func (a *Alert) Clean() {
 	a.IconEmoji = strings.ToLower(strings.TrimSpace(a.IconEmoji))
 	a.Severity = AlertSeverity(strings.ToLower(strings.TrimSpace(string(a.Severity))))
 
-	if len(a.FallbackText) > MaxFallbackTextLength {
-		a.FallbackText = a.FallbackText[:MaxFallbackTextLength-3] + "..."
+	if utf8.RuneCountInString(a.FallbackText) > MaxFallbackTextLength {
+		a.FallbackText = truncateString(a.FallbackText, MaxFallbackTextLength-3) + "..."
 	}
 
 	if a.Severity == "" || a.Severity == "critical" {
@@ -309,47 +314,55 @@ func (a *Alert) Clean() {
 
 	// Max length in the Slack API is 150, see https://api.slack.com/reference/block-kit/blocks#header
 	// We also need to leave some space for the :status: emoji to be replaced with something a bit longer by the Slack Manager
-	if len(a.Header) > MaxHeaderLength {
-		a.Header = strings.TrimSpace(a.Header[:MaxHeaderLength-3]) + "..."
+	if utf8.RuneCountInString(a.Header) > MaxHeaderLength {
+		a.Header = strings.TrimSpace(truncateString(a.Header, MaxHeaderLength-3)) + "..."
 	}
 
-	if len(a.HeaderWhenResolved) > MaxHeaderLength {
-		a.HeaderWhenResolved = strings.TrimSpace(a.HeaderWhenResolved[:MaxHeaderLength-3]) + "..."
+	if utf8.RuneCountInString(a.HeaderWhenResolved) > MaxHeaderLength {
+		a.HeaderWhenResolved = strings.TrimSpace(truncateString(a.HeaderWhenResolved, MaxHeaderLength-3)) + "..."
 	}
 
 	a.Text = shortenAlertTextIfNeeded(a.Text)
 	a.TextWhenResolved = shortenAlertTextIfNeeded(a.TextWhenResolved)
 
-	if len(a.Author) > MaxAuthorLength {
-		a.Author = strings.TrimSpace(a.Author[:MaxAuthorLength-3]) + "..."
+	if utf8.RuneCountInString(a.Author) > MaxAuthorLength {
+		a.Author = strings.TrimSpace(truncateString(a.Author, MaxAuthorLength-3)) + "..."
 	}
 
-	if len(a.Host) > MaxHostLength {
-		a.Host = strings.TrimSpace(a.Host[:MaxHostLength-3]) + "..."
+	if utf8.RuneCountInString(a.Host) > MaxHostLength {
+		a.Host = strings.TrimSpace(truncateString(a.Host, MaxHostLength-3)) + "..."
 	}
 
-	if len(a.Username) > MaxUsernameLength {
-		a.Username = strings.TrimSpace(a.Username[:MaxUsernameLength-3]) + "..."
+	if utf8.RuneCountInString(a.Username) > MaxUsernameLength {
+		a.Username = strings.TrimSpace(truncateString(a.Username, MaxUsernameLength-3)) + "..."
 	}
 
-	if len(a.Footer) > MaxFooterLength {
-		a.Footer = strings.TrimSpace(a.Footer[:MaxFooterLength-3]) + "..."
+	if utf8.RuneCountInString(a.Footer) > MaxFooterLength {
+		a.Footer = strings.TrimSpace(truncateString(a.Footer, MaxFooterLength-3)) + "..."
 	}
 
 	for _, field := range a.Fields {
+		if field == nil {
+			continue
+		}
+
 		field.Title = strings.TrimSpace(field.Title)
 		field.Value = strings.TrimSpace(field.Value)
 
-		if len(field.Title) > MaxFieldTitleLength {
-			field.Title = strings.TrimSpace(field.Title[:MaxFieldTitleLength-3]) + "..."
+		if utf8.RuneCountInString(field.Title) > MaxFieldTitleLength {
+			field.Title = strings.TrimSpace(truncateString(field.Title, MaxFieldTitleLength-3)) + "..."
 		}
 
-		if len(field.Value) > MaxFieldValueLength {
-			field.Value = strings.TrimSpace(field.Value[:MaxFieldValueLength-3]) + "..."
+		if utf8.RuneCountInString(field.Value) > MaxFieldValueLength {
+			field.Value = strings.TrimSpace(truncateString(field.Value, MaxFieldValueLength-3)) + "..."
 		}
 	}
 
 	for _, hook := range a.Webhooks {
+		if hook == nil {
+			continue
+		}
+
 		hook.ID = strings.TrimSpace(hook.ID)
 		hook.ButtonText = strings.TrimSpace(hook.ButtonText)
 		hook.URL = strings.TrimSpace(hook.URL)
@@ -360,17 +373,41 @@ func (a *Alert) Clean() {
 		}
 
 		for _, input := range hook.PlainTextInput {
+			if input == nil {
+				continue
+			}
+
 			input.ID = strings.TrimSpace(input.ID)
 			input.Description = strings.TrimSpace(input.Description)
+			input.InitialValue = strings.TrimSpace(input.InitialValue)
+		}
+
+		for _, input := range hook.CheckboxInput {
+			if input == nil {
+				continue
+			}
+
+			input.ID = strings.TrimSpace(input.ID)
+			input.Label = strings.TrimSpace(input.Label)
 		}
 	}
 
 	if len(a.Escalation) > 0 {
 		sort.Slice(a.Escalation, func(i, j int) bool {
+			if a.Escalation[i] == nil {
+				return true
+			}
+			if a.Escalation[j] == nil {
+				return false
+			}
 			return a.Escalation[i].DelaySeconds < a.Escalation[j].DelaySeconds
 		})
 
 		for _, e := range a.Escalation {
+			if e == nil {
+				continue
+			}
+
 			e.MoveToChannel = strings.ToUpper(strings.TrimSpace(e.MoveToChannel))
 
 			for i, mention := range e.SlackMentions {
@@ -429,6 +466,8 @@ func (a *Alert) Validate() error {
 	return a.ValidateIgnoreIfTextContains()
 }
 
+// ValidateSlackChannelIDAndRouteKey validates that SlackChannelID and RouteKey are valid, if set.
+// Both values are allowed to be empty (in which case a fallback mapping must exist in the API).
 func (a *Alert) ValidateSlackChannelIDAndRouteKey() error {
 	if a.SlackChannelID != "" {
 		if !SlackChannelIDOrNameRegex.MatchString(a.SlackChannelID) {
@@ -659,6 +698,10 @@ func (a *Alert) ValidateWebhooks() error {
 			if len(input.InitialValue) > input.MaxLength {
 				return fmt.Errorf("webhook[%d].plainTextInput[%d].initialValue cannot be longer than maxLength", index, inputIndex)
 			}
+
+			if len(input.InitialValue) < input.MinLength {
+				return fmt.Errorf("webhook[%d].plainTextInput[%d].initialValue cannot be shorter than minLength", index, inputIndex)
+			}
 		}
 
 		for inputIndex, input := range hook.CheckboxInput {
@@ -712,6 +755,10 @@ func (a *Alert) ValidateEscalation() error {
 		return nil
 	}
 
+	if len(a.Escalation) > 3 {
+		return errors.New("too many escalation points, expected <=3")
+	}
+
 	previousDelay := 0
 
 	for index, e := range a.Escalation {
@@ -750,24 +797,37 @@ func (a *Alert) ValidateEscalation() error {
 }
 
 func shortenAlertTextIfNeeded(text string) string {
-	if len(text) <= MaxTextLength {
+	if utf8.RuneCountInString(text) <= MaxTextLength {
 		return text
 	}
 
 	endsWithCodeBlock := strings.HasSuffix(text, "```")
 
 	if endsWithCodeBlock {
-		return strings.TrimSpace(text[:MaxTextLength-6]) + "...```"
+		return strings.TrimSpace(truncateString(text, MaxTextLength-6)) + "...```"
 	}
 
-	return strings.TrimSpace(text[:MaxTextLength-3]) + "..."
+	return strings.TrimSpace(truncateString(text, MaxTextLength-3)) + "..."
+}
+
+// truncateString truncates a string to maxRunes runes, safely handling multi-byte UTF-8 characters.
+func truncateString(s string, maxRunes int) string {
+	if utf8.RuneCountInString(s) <= maxRunes {
+		return s
+	}
+
+	runes := []rune(s)
+	return string(runes[:maxRunes])
 }
 
 func hash(input ...string) string {
 	h := sha256.New()
 
+	delimiter := []byte{0}
+
 	for _, s := range input {
 		h.Write([]byte(s))
+		h.Write(delimiter)
 	}
 
 	bs := h.Sum(nil)

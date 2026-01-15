@@ -19,7 +19,6 @@ func TestNoopLogger(t *testing.T) {
 	m.Infof("", nil)
 	m.Error("")
 	m.Errorf("", nil)
-	m.HttpLoggingHandler()
 	m.WithField("", nil)
 	m.WithFields(nil)
 }

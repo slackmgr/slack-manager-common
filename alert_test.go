@@ -728,15 +728,25 @@ func TestAlertValidation(t *testing.T) {
 		a.Clean()
 		require.ErrorContains(t, a.Validate(), "webhook[0].url is too long")
 
-		// Url must be valid
-		a = &common.Alert{Header: "a", RouteKey: "b", Webhooks: []*common.Webhook{{ID: "foo", URL: "foo", ButtonText: "press me"}}}
+		// HTTP Url must be valid absolute URL
+		a = &common.Alert{Header: "a", RouteKey: "b", Webhooks: []*common.Webhook{{ID: "foo", URL: "http://", ButtonText: "press me"}}}
 		a.Clean()
 		require.ErrorContains(t, a.Validate(), "webhook[0].url is not a valid absolute URL")
 
-		// Url must be absolute
-		a = &common.Alert{Header: "a", RouteKey: "b", Webhooks: []*common.Webhook{{ID: "foo", URL: "/foo", ButtonText: "press me"}}}
+		// HTTP Url must be absolute
+		a = &common.Alert{Header: "a", RouteKey: "b", Webhooks: []*common.Webhook{{ID: "foo", URL: "https://", ButtonText: "press me"}}}
 		a.Clean()
 		require.ErrorContains(t, a.Validate(), "webhook[0].url is not a valid absolute URL")
+
+		// Non-HTTP URL (custom handler) must be valid ASCII
+		a = &common.Alert{Header: "a", RouteKey: "b", Webhooks: []*common.Webhook{{ID: "foo", URL: "custom-handler\x00invalid", ButtonText: "press me"}}}
+		a.Clean()
+		require.ErrorContains(t, a.Validate(), "webhook[0].url contains invalid characters")
+
+		// Non-HTTP URL (custom handler) with valid ASCII is accepted
+		a = &common.Alert{Header: "a", RouteKey: "b", Webhooks: []*common.Webhook{{ID: "foo", URL: "my-custom-handler:action", ButtonText: "press me"}}}
+		a.Clean()
+		require.NoError(t, a.Validate())
 
 		// Button text is required
 		a = &common.Alert{Header: "a", RouteKey: "b", Webhooks: []*common.Webhook{{ID: "foo", URL: "http://foo.bar", ButtonText: ""}}}

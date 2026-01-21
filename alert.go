@@ -26,48 +26,105 @@ var (
 )
 
 const (
-	// MaxTimestampAge is the maximum age of an alert timestamp. If the timestamp is older than this, it will be replaced with the current time.
+	// MaxTimestampAge is the maximum age of an alert timestamp.
+	// If the timestamp is older than this, it will be replaced with the current time.
 	MaxTimestampAge = 7 * 24 * time.Hour
 
-	MaxSlackChannelIDLength       = 80
-	MaxRouteKeyLength             = 1000
-	MaxHeaderLength               = 130
-	MaxFallbackTextLength         = 150
-	MaxTextLength                 = 10000
-	MaxAuthorLength               = 100
-	MaxHostLength                 = 100
-	MaxFooterLength               = 300
-	MaxUsernameLength             = 100
-	MaxFieldTitleLength           = 30
-	MaxFieldValueLength           = 200
-	MaxIconEmojiLength            = 50
-	MaxMentionLength              = 20
-	MaxCorrelationIDLength        = 500
-	MinAutoResolveSeconds         = 30
-	MaxAutoResolveSeconds         = 63113851 // 2 years
+	// Alert field length limits.
+	// These constants define maximum lengths for various alert fields to ensure
+	// compatibility with Slack's API limits and prevent excessive data storage.
+
+	// MaxSlackChannelIDLength is the maximum length of a Slack channel ID or name.
+	MaxSlackChannelIDLength = 80
+	// MaxRouteKeyLength is the maximum length of a routing key for channel routing.
+	MaxRouteKeyLength = 1000
+	// MaxHeaderLength is the maximum length of the alert header (title).
+	// Slack's header block limit is 150 characters; we reserve space for status emoji replacement.
+	MaxHeaderLength = 130
+	// MaxFallbackTextLength is the maximum length of the fallback notification text.
+	MaxFallbackTextLength = 150
+	// MaxTextLength is the maximum length of the alert text (body).
+	MaxTextLength = 10000
+	// MaxAuthorLength is the maximum length of the author field.
+	MaxAuthorLength = 100
+	// MaxHostLength is the maximum length of the host field.
+	MaxHostLength = 100
+	// MaxFooterLength is the maximum length of the footer field.
+	MaxFooterLength = 300
+	// MaxUsernameLength is the maximum length of the bot username.
+	MaxUsernameLength = 100
+	// MaxFieldTitleLength is the maximum length of a field title.
+	MaxFieldTitleLength = 30
+	// MaxFieldValueLength is the maximum length of a field value.
+	MaxFieldValueLength = 200
+	// MaxIconEmojiLength is the maximum length of the icon emoji (excluding colons).
+	MaxIconEmojiLength = 50
+	// MaxMentionLength is the maximum length of a Slack mention (excluding angle brackets).
+	MaxMentionLength = 20
+	// MaxCorrelationIDLength is the maximum length of the correlation ID.
+	MaxCorrelationIDLength = 500
+
+	// Auto-resolve timing limits.
+
+	// MinAutoResolveSeconds is the minimum seconds before auto-resolving an issue.
+	MinAutoResolveSeconds = 30
+	// MaxAutoResolveSeconds is the maximum seconds before auto-resolving an issue (approximately 2 years).
+	MaxAutoResolveSeconds = 63113851
+
+	// IgnoreIfTextContains limits.
+
+	// MaxIgnoreIfTextContainsLength is the maximum length of each ignore pattern.
 	MaxIgnoreIfTextContainsLength = 1000
-	MaxIgnoreIfTextContainsCount  = 20
-	MaxFieldCount                 = 20
+	// MaxIgnoreIfTextContainsCount is the maximum number of ignore patterns per alert.
+	MaxIgnoreIfTextContainsCount = 20
 
-	MaxWebhookCount                    = 5
-	MaxWebhookIDLength                 = 100
-	MaxWebhookURLLength                = 1000
-	MaxWebhookButtonTextLength         = 25
-	MaxWebhookConfirmationTextLength   = 1000
-	MaxWebhookPayloadCount             = 50
-	MaxWebhookPlainTextInputCount      = 10
-	MaxWebhookCheckboxInputCount       = 10
-	MaxWebhookInputIDLength            = 200
-	MaxWebhookInputDescriptionLength   = 200
-	MaxWebhookInputLabelLength         = 200
-	MaxWebhookInputTextLength          = 3000
-	MaxWebhookCheckboxOptionCount      = 5
+	// MaxFieldCount is the maximum number of fields per alert.
+	MaxFieldCount = 20
+
+	// Webhook limits.
+	// These constants define limits for webhook configurations.
+
+	// MaxWebhookCount is the maximum number of webhooks per alert.
+	MaxWebhookCount = 5
+	// MaxWebhookIDLength is the maximum length of a webhook ID.
+	MaxWebhookIDLength = 100
+	// MaxWebhookURLLength is the maximum length of a webhook URL.
+	MaxWebhookURLLength = 1000
+	// MaxWebhookButtonTextLength is the maximum length of button text (Slack limit: 25 characters).
+	MaxWebhookButtonTextLength = 25
+	// MaxWebhookConfirmationTextLength is the maximum length of confirmation dialog text.
+	MaxWebhookConfirmationTextLength = 1000
+	// MaxWebhookPayloadCount is the maximum number of key-value pairs in webhook payload.
+	MaxWebhookPayloadCount = 50
+	// MaxWebhookPlainTextInputCount is the maximum number of text inputs per webhook.
+	MaxWebhookPlainTextInputCount = 10
+	// MaxWebhookCheckboxInputCount is the maximum number of checkbox groups per webhook.
+	MaxWebhookCheckboxInputCount = 10
+	// MaxWebhookInputIDLength is the maximum length of an input field ID.
+	MaxWebhookInputIDLength = 200
+	// MaxWebhookInputDescriptionLength is the maximum length of an input field description/placeholder.
+	MaxWebhookInputDescriptionLength = 200
+	// MaxWebhookInputLabelLength is the maximum length of a checkbox group label.
+	MaxWebhookInputLabelLength = 200
+	// MaxWebhookInputTextLength is the maximum length of text input content.
+	MaxWebhookInputTextLength = 3000
+	// MaxWebhookCheckboxOptionCount is the maximum number of options per checkbox group.
+	MaxWebhookCheckboxOptionCount = 5
+	// MaxWebhookCheckboxOptionTextLength is the maximum length of checkbox option text.
 	MaxWebhookCheckboxOptionTextLength = 50
-	MaxCheckboxOptionValueLength       = 100
+	// MaxCheckboxOptionValueLength is the maximum length of a checkbox option value.
+	MaxCheckboxOptionValueLength = 100
 
-	MaxEscalationCount             = 3
-	MinEscalationDelaySeconds      = 30
-	MinEscalationDelayDiffSeconds  = 30
+	// Escalation limits.
+	// These constants define limits for escalation configurations.
+
+	// MaxEscalationCount is the maximum number of escalation points per alert.
+	MaxEscalationCount = 3
+	// MinEscalationDelaySeconds is the minimum delay before the first escalation triggers.
+	MinEscalationDelaySeconds = 30
+	// MinEscalationDelayDiffSeconds is the minimum time between consecutive escalations.
+	MinEscalationDelayDiffSeconds = 30
+	// MaxEscalationSlackMentionCount is the maximum number of Slack mentions per escalation.
 	MaxEscalationSlackMentionCount = 10
 )
 
@@ -187,13 +244,33 @@ type Alert struct {
 
 	// ArchivingDelaySeconds is the number of seconds to wait before archiving the issue, after it is resolved.
 	// A non-archived issue is re-opened if a new alert with the same CorrelationID is received, and the same Slack post is updated.
-	// An archived can never be re-opened, and any new alerts with the same CorrelationID will generate a new issue and new Slack post.
-	ArchivingDelaySeconds int            `json:"archivingDelaySeconds"`
-	Escalation            []*Escalation  `json:"escalation"`
-	IgnoreIfTextContains  []string       `json:"ignoreIfTextContains"`
-	FailOnRateLimitError  bool           `json:"failOnRateLimitError"`
-	Webhooks              []*Webhook     `json:"webhooks"`
-	Metadata              map[string]any `json:"metadata"`
+	// An archived issue can never be re-opened, and any new alerts with the same CorrelationID will generate a new issue and new Slack post.
+	ArchivingDelaySeconds int `json:"archivingDelaySeconds"`
+
+	// Escalation defines a list of escalation points for this alert's issue.
+	// Each escalation can increase severity, add Slack mentions, or move the issue to a different channel after a specified delay.
+	// Escalations are sorted by DelaySeconds and triggered in order if the issue remains unresolved.
+	// Maximum of MaxEscalationCount escalations allowed.
+	Escalation []*Escalation `json:"escalation"`
+
+	// IgnoreIfTextContains is a list of substrings that, if found in the alert text, will cause the alert to be ignored.
+	// This is useful for filtering out known noise or false positives.
+	// Maximum of MaxIgnoreIfTextContainsCount items, each up to MaxIgnoreIfTextContainsLength characters.
+	IgnoreIfTextContains []string `json:"ignoreIfTextContains"`
+
+	// Webhooks defines interactive buttons that appear on the Slack post.
+	// Each webhook triggers an HTTP POST to the specified URL when clicked.
+	// Webhooks can include confirmation dialogs, input forms, and access level restrictions.
+	// Maximum of MaxWebhookCount webhooks allowed.
+	Webhooks []*Webhook `json:"webhooks"`
+
+	// Metadata is an arbitrary key-value map for storing custom data with the alert.
+	// This data is passed through to webhook payloads and can be used for tracking or correlation purposes.
+	// The Slack Manager does not interpret this data.
+	Metadata map[string]any `json:"metadata"`
+
+	// Deprecated: FailOnRateLimitError is no longer in use.
+	FailOnRateLimitError bool `json:"failOnRateLimitError"`
 }
 
 // Field is an alert field.
@@ -221,38 +298,125 @@ type Escalation struct {
 	MoveToChannel string `json:"moveToChannel"`
 }
 
+// Webhook represents an interactive button that appears on the Slack post.
+// When clicked, it triggers an HTTP POST request to the specified URL (for http/https URLs),
+// or invokes a custom webhook handler registered in the Slack Manager app.
 type Webhook struct {
-	ID               string                   `json:"id"`
-	URL              string                   `json:"url"`
-	ConfirmationText string                   `json:"confirmationText"`
-	ButtonText       string                   `json:"buttonText"`
-	ButtonStyle      WebhookButtonStyle       `json:"buttonStyle"`
-	AccessLevel      WebhookAccessLevel       `json:"accessLevel"`
-	DisplayMode      WebhookDisplayMode       `json:"displayMode"`
-	Payload          map[string]any           `json:"payload"`
-	PlainTextInput   []*WebhookPlainTextInput `json:"plainTextInput"`
-	CheckboxInput    []*WebhookCheckboxInput  `json:"checkboxInput"`
+	// ID is the unique identifier for this webhook within the alert.
+	// It must be unique among all webhooks in the same alert.
+	// Maximum length: MaxWebhookIDLength characters.
+	ID string `json:"id"`
+
+	// URL specifies the target for the webhook when the button is clicked.
+	// For HTTP webhooks, this must be a valid absolute URL starting with http:// or https://.
+	// For custom webhook handlers registered in the Slack Manager app, this can be an arbitrary
+	// ASCII string identifier that the handler recognizes.
+	// The field name "URL" is retained for backwards compatibility.
+	// Maximum length: MaxWebhookURLLength characters.
+	URL string `json:"url"`
+
+	// ConfirmationText is the text displayed in a confirmation dialog before triggering the webhook.
+	// If empty, no confirmation dialog is shown and the webhook is triggered immediately.
+	// Maximum length: MaxWebhookConfirmationTextLength characters.
+	ConfirmationText string `json:"confirmationText"`
+
+	// ButtonText is the label displayed on the button in Slack.
+	// This field is required.
+	// Maximum length: MaxWebhookButtonTextLength characters.
+	ButtonText string `json:"buttonText"`
+
+	// ButtonStyle determines the visual appearance of the button in Slack.
+	// Valid values are defined by WebhookButtonStyle constants.
+	// If empty, the default Slack button style is used.
+	ButtonStyle WebhookButtonStyle `json:"buttonStyle"`
+
+	// AccessLevel controls who can click this webhook button.
+	// Valid values are defined by WebhookAccessLevel constants.
+	// If empty, anyone in the channel can trigger the webhook.
+	AccessLevel WebhookAccessLevel `json:"accessLevel"`
+
+	// DisplayMode controls when the webhook button is visible.
+	// Valid values are defined by WebhookDisplayMode constants.
+	// If empty, the button is always visible.
+	DisplayMode WebhookDisplayMode `json:"displayMode"`
+
+	// Payload is a map of key-value pairs sent in the HTTP POST body when the webhook is triggered.
+	// Alert metadata and input values are merged into this payload.
+	// Maximum of MaxWebhookPayloadCount items.
+	Payload map[string]any `json:"payload"`
+
+	// PlainTextInput defines text input fields shown in the webhook's modal dialog.
+	// User-entered values are included in the webhook payload.
+	// Maximum of MaxWebhookPlainTextInputCount inputs.
+	PlainTextInput []*WebhookPlainTextInput `json:"plainTextInput"`
+
+	// CheckboxInput defines checkbox groups shown in the webhook's modal dialog.
+	// Selected values are included in the webhook payload.
+	// Maximum of MaxWebhookCheckboxInputCount inputs.
+	CheckboxInput []*WebhookCheckboxInput `json:"checkboxInput"`
 }
 
+// WebhookPlainTextInput represents a text input field in a webhook's modal dialog.
+// The user's input is included in the webhook payload with the field ID as the key.
 type WebhookPlainTextInput struct {
-	ID           string `json:"id"`
-	Description  string `json:"description"`
-	MinLength    int    `json:"minLength"`
-	MaxLength    int    `json:"maxLength"`
-	Multiline    bool   `json:"multiline"`
+	// ID is the unique identifier for this input field.
+	// It must be unique among all inputs (both text and checkbox) in the same webhook.
+	// The ID is used as the key in the webhook payload.
+	// Maximum length: MaxWebhookInputIDLength characters.
+	ID string `json:"id"`
+
+	// Description is the placeholder text shown in the input field before the user types.
+	// Maximum length: MaxWebhookInputDescriptionLength characters.
+	Description string `json:"description"`
+
+	// MinLength is the minimum number of characters required for the input.
+	// Must be >= 0 and <= MaxLength.
+	MinLength int `json:"minLength"`
+
+	// MaxLength is the maximum number of characters allowed for the input.
+	// Must be >= MinLength and <= MaxWebhookInputTextLength.
+	MaxLength int `json:"maxLength"`
+
+	// Multiline determines whether the input field allows multiple lines of text.
+	// If true, a larger textarea is shown instead of a single-line input.
+	Multiline bool `json:"multiline"`
+
+	// InitialValue is the default text pre-filled in the input field.
+	// Must satisfy the MinLength and MaxLength constraints.
 	InitialValue string `json:"initialValue"`
 }
 
+// WebhookCheckboxInput represents a group of checkboxes in a webhook's modal dialog.
+// Selected option values are included in the webhook payload as an array with the field ID as the key.
 type WebhookCheckboxInput struct {
-	ID      string                   `json:"id"`
-	Label   string                   `json:"label"`
+	// ID is the unique identifier for this checkbox group.
+	// It must be unique among all inputs (both text and checkbox) in the same webhook.
+	// The ID is used as the key in the webhook payload.
+	// Maximum length: MaxWebhookInputIDLength characters.
+	ID string `json:"id"`
+
+	// Label is the text displayed above the checkbox group.
+	// Maximum length: MaxWebhookInputLabelLength characters.
+	Label string `json:"label"`
+
+	// Options is the list of checkbox options available in this group.
+	// Maximum of MaxWebhookCheckboxOptionCount options.
 	Options []*WebhookCheckboxOption `json:"options"`
 }
 
+// WebhookCheckboxOption represents a single checkbox option within a WebhookCheckboxInput.
 type WebhookCheckboxOption struct {
-	Value    string `json:"value"`
-	Text     string `json:"text"`
-	Selected bool   `json:"selected"`
+	// Value is the value included in the webhook payload when this option is selected.
+	// Must be unique among all options in the same checkbox group.
+	// Maximum length: MaxCheckboxOptionValueLength characters.
+	Value string `json:"value"`
+
+	// Text is the label displayed next to the checkbox.
+	// Maximum length: MaxWebhookCheckboxOptionTextLength characters.
+	Text string `json:"text"`
+
+	// Selected determines whether this checkbox is pre-selected when the modal opens.
+	Selected bool `json:"selected"`
 }
 
 // NewPanicAlert returns an alert with the severity set to 'panic'
@@ -295,6 +459,10 @@ func (a *Alert) UniqueID() string {
 	return hash("alert", a.SlackChannelID, a.RouteKey, a.CorrelationID, a.Timestamp.UTC().Format(time.RFC3339Nano), a.Header, a.Text)
 }
 
+// Clean normalizes and sanitizes all alert fields.
+// It trims whitespace, normalizes case where appropriate, truncates fields that exceed maximum lengths,
+// and applies default values for empty or invalid fields (e.g., sets Severity to 'error' if empty).
+// This method should be called before validation to ensure consistent data.
 func (a *Alert) Clean() {
 	if time.Since(a.Timestamp) > MaxTimestampAge {
 		a.Timestamp = time.Now()
@@ -507,6 +675,8 @@ func (a *Alert) ValidateSlackChannelIDAndRouteKey() error {
 	return nil
 }
 
+// ValidateHeaderAndText validates that at least one of Header or Text is non-empty.
+// An alert must have either a header or text content to be meaningful.
 func (a *Alert) ValidateHeaderAndText() error {
 	if a.Header == "" && a.Text == "" {
 		return errors.New("header and text cannot both be empty")
@@ -515,6 +685,7 @@ func (a *Alert) ValidateHeaderAndText() error {
 	return nil
 }
 
+// ValidateIcon validates that IconEmoji, if set, matches the expected Slack emoji format ':emoji:'.
 func (a *Alert) ValidateIcon() error {
 	if a.IconEmoji == "" {
 		return nil
@@ -527,6 +698,7 @@ func (a *Alert) ValidateIcon() error {
 	return nil
 }
 
+// ValidateLink validates that Link, if set, is a valid absolute URL with a scheme.
 func (a *Alert) ValidateLink() error {
 	if a.Link == "" {
 		return nil
@@ -544,6 +716,7 @@ func (a *Alert) ValidateLink() error {
 	return nil
 }
 
+// ValidateSeverity validates that Severity is one of the allowed AlertSeverity values.
 func (a *Alert) ValidateSeverity() error {
 	if !SeverityIsValid(a.Severity) {
 		return fmt.Errorf("severity '%s' is not valid, expected one of [%s]", a.Severity, strings.Join(ValidSeverities(), ", "))
@@ -552,6 +725,7 @@ func (a *Alert) ValidateSeverity() error {
 	return nil
 }
 
+// ValidateCorrelationID validates that CorrelationID, if set, does not exceed MaxCorrelationIDLength.
 func (a *Alert) ValidateCorrelationID() error {
 	if a.CorrelationID == "" {
 		return nil
@@ -564,6 +738,8 @@ func (a *Alert) ValidateCorrelationID() error {
 	return nil
 }
 
+// ValidateAutoResolve validates that AutoResolveSeconds is within the allowed range
+// when IssueFollowUpEnabled is true.
 func (a *Alert) ValidateAutoResolve() error {
 	if !a.IssueFollowUpEnabled {
 		return nil
@@ -580,6 +756,8 @@ func (a *Alert) ValidateAutoResolve() error {
 	return nil
 }
 
+// ValidateIgnoreIfTextContains validates that the IgnoreIfTextContains slice
+// does not exceed the maximum count and that each item does not exceed the maximum length.
 func (a *Alert) ValidateIgnoreIfTextContains() error {
 	if len(a.IgnoreIfTextContains) == 0 {
 		return nil
@@ -598,6 +776,7 @@ func (a *Alert) ValidateIgnoreIfTextContains() error {
 	return nil
 }
 
+// ValidateFields validates that the number of fields does not exceed MaxFieldCount.
 func (a *Alert) ValidateFields() error {
 	if len(a.Fields) > MaxFieldCount {
 		return fmt.Errorf("too many fields, expected <=%d", MaxFieldCount)
@@ -606,6 +785,9 @@ func (a *Alert) ValidateFields() error {
 	return nil
 }
 
+// ValidateWebhooks validates all webhooks in the alert.
+// It checks that the webhook count is within limits, all required fields are present,
+// URLs are valid, IDs are unique, and all nested inputs are properly configured.
 func (a *Alert) ValidateWebhooks() error {
 	if a.Webhooks == nil {
 		return nil
@@ -644,13 +826,18 @@ func (a *Alert) ValidateWebhooks() error {
 			return fmt.Errorf("webhook[%d].url is too long, expected length <=%d", index, MaxWebhookURLLength)
 		}
 
-		url, err := url.ParseRequestURI(hook.URL)
-		if err != nil {
-			return fmt.Errorf("webhook[%d].url is not a valid absolute URL", index)
-		}
+		// For HTTP URLs, validate as absolute URL. For custom handler identifiers, validate as ASCII.
+		if strings.HasPrefix(strings.ToLower(hook.URL), "http") {
+			parsedURL, err := url.ParseRequestURI(hook.URL)
+			if err != nil {
+				return fmt.Errorf("webhook[%d].url is not a valid absolute URL", index)
+			}
 
-		if url.Scheme == "" {
-			return fmt.Errorf("webhook[%d].url is not a valid absolute URL", index)
+			if parsedURL.Scheme == "" || parsedURL.Host == "" {
+				return fmt.Errorf("webhook[%d].url is not a valid absolute URL", index)
+			}
+		} else if !isValidASCII(hook.URL) {
+			return fmt.Errorf("webhook[%d].url contains invalid characters, expected printable ASCII", index)
 		}
 
 		if hook.ButtonText == "" {
@@ -801,6 +988,9 @@ func (a *Alert) ValidateWebhooks() error {
 	return nil
 }
 
+// ValidateEscalation validates all escalation points in the alert.
+// It checks that the escalation count is within limits, delays are properly spaced,
+// severities are valid for escalation, and Slack mentions and channels are valid.
 func (a *Alert) ValidateEscalation() error {
 	if a.Escalation == nil {
 		return nil
@@ -873,6 +1063,16 @@ func truncateString(s string, maxRunes int) string {
 
 	runes := []rune(s)
 	return string(runes[:maxRunes])
+}
+
+// isValidASCII returns true if the string contains only printable ASCII characters (0x20-0x7E).
+func isValidASCII(s string) bool {
+	for i := range len(s) {
+		if s[i] < 0x20 || s[i] > 0x7E {
+			return false
+		}
+	}
+	return true
 }
 
 func hash(input ...string) string {

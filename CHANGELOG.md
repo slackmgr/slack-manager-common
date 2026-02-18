@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-02-18
+
 ### Added
 - Comprehensive README with installation, usage examples, and API documentation
 - MIT License for open source distribution
@@ -21,5 +23,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 See git history for changes in v0.1.4 and earlier versions.
 
-[Unreleased]: https://github.com/peteraglen/slack-manager-common/compare/v0.1.4...HEAD
+[Unreleased]: https://github.com/peteraglen/slack-manager-common/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/peteraglen/slack-manager-common/compare/v0.1.4...v0.2.0
 [0.1.4]: https://github.com/peteraglen/slack-manager-common/releases/tag/v0.1.4

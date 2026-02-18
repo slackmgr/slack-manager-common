@@ -1,5 +1,10 @@
 # slack-manager-common
 
+[![Go Reference](https://pkg.go.dev/badge/github.com/peteraglen/slack-manager-common.svg)](https://pkg.go.dev/github.com/peteraglen/slack-manager-common)
+[![Go Report Card](https://goreportcard.com/badge/github.com/peteraglen/slack-manager-common)](https://goreportcard.com/report/github.com/peteraglen/slack-manager-common)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![CI](https://github.com/peteraglen/slack-manager-common/workflows/CI/badge.svg)](https://github.com/peteraglen/slack-manager-common/actions)
+
 A Go shared library package providing common interfaces and data structures for the Slack Manager system. This package defines contracts for database access, logging, metrics, and core domain types like alerts and issues.
 
 ## Overview

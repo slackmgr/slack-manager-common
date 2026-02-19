@@ -1,11 +1,11 @@
-package common_test
+package types_test
 
 import (
 	"context"
 	"testing"
 	"time"
 
-	common "github.com/slackmgr/slack-manager-common"
+	"github.com/slackmgr/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -17,7 +17,7 @@ func TestInMemoryFifoQueue(t *testing.T) {
 		t.Parallel()
 
 		ctx := context.Background()
-		queue := common.NewInMemoryFifoQueue("alerts", 2, time.Millisecond)
+		queue := types.NewInMemoryFifoQueue("alerts", 2, time.Millisecond)
 		err := queue.Send(ctx, "C000000001", "dedupID_1", "body_1")
 		require.NoError(t, err)
 		err = queue.Send(ctx, "C000000002", "dedupID_2", "body_2")
@@ -30,7 +30,7 @@ func TestInMemoryFifoQueue(t *testing.T) {
 		t.Parallel()
 
 		ctx, cancel := context.WithCancel(context.Background())
-		queue := common.NewInMemoryFifoQueue("alerts", 1, time.Second)
+		queue := types.NewInMemoryFifoQueue("alerts", 1, time.Second)
 		err := queue.Send(ctx, "C000000001", "dedupID_1", "body_1")
 		require.NoError(t, err)
 		cancel()
@@ -43,7 +43,7 @@ func TestInMemoryFifoQueue(t *testing.T) {
 
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
-		queue := common.NewInMemoryFifoQueue("alerts", 3, time.Millisecond)
+		queue := types.NewInMemoryFifoQueue("alerts", 3, time.Millisecond)
 		err := queue.Send(ctx, "C000000001", "dedupID_1", "body_1")
 		require.NoError(t, err)
 		err = queue.Send(ctx, "C000000002", "dedupID_2", "body_2")
@@ -51,14 +51,14 @@ func TestInMemoryFifoQueue(t *testing.T) {
 		err = queue.Send(ctx, "C000000003", "dedupID_3", "body_3")
 		require.NoError(t, err)
 
-		receivedItems := make(chan *common.FifoQueueItem, 3)
+		receivedItems := make(chan *types.FifoQueueItem, 3)
 
 		go func() {
 			err := queue.Receive(ctx, receivedItems)
 			assert.ErrorIs(t, err, context.Canceled)
 		}()
 
-		result := []*common.FifoQueueItem{}
+		result := []*types.FifoQueueItem{}
 
 		for item := range receivedItems {
 			result = append(result, item)
@@ -78,13 +78,13 @@ func TestInMemoryFifoQueue(t *testing.T) {
 
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
-		queue := common.NewInMemoryFifoQueue("alerts", 2, time.Second)
+		queue := types.NewInMemoryFifoQueue("alerts", 2, time.Second)
 		err := queue.Send(ctx, "C000000001", "dedupID_1", "body_1")
 		require.NoError(t, err)
 		err = queue.Send(ctx, "C000000002", "dedupID_2", "body_2")
 		require.NoError(t, err)
 
-		receivedItems := make(chan *common.FifoQueueItem)
+		receivedItems := make(chan *types.FifoQueueItem)
 
 		go func() {
 			err := queue.Receive(ctx, receivedItems)

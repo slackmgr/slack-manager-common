@@ -1,4 +1,4 @@
-package common
+package types
 
 // AlertSeverity represents the severity for a given alert
 type AlertSeverity string

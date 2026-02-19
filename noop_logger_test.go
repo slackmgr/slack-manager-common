@@ -1,16 +1,16 @@
-package common_test
+package types_test
 
 import (
 	"testing"
 
-	common "github.com/slackmgr/slack-manager-common"
+	"github.com/slackmgr/types"
 )
 
 func TestNoopLogger(t *testing.T) {
 	t.Parallel()
 
 	// Ensure NoopLogger implements the Logger interface
-	var m common.Logger = &common.NoopLogger{}
+	var m types.Logger = &types.NoopLogger{}
 
 	// Ensure methods can be called without errors or panics
 	m.Debug("")

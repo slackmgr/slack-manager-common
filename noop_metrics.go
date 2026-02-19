@@ -1,4 +1,4 @@
-package common
+package types
 
 // NoopMetrics is a no-op implementation of the Metrics interface.
 // It does not record any metrics. Use if no metrics are needed.

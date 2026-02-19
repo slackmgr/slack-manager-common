@@ -1,4 +1,4 @@
-// Package common provides shared interfaces and data structures for the Slack Manager system.
+// Package types provides shared interfaces and data structures for the Slack Manager system.
 //
 // This package defines contracts for database access, logging, metrics, and core domain types
 // like alerts and issues. It serves as the foundation for the Slack Manager ecosystem, enabling
@@ -61,7 +61,7 @@
 // # Usage Example
 //
 //	// Initialize a new error-level notification
-//	alert := common.NewErrorAlert()
+//	alert := types\.NewErrorAlert()
 //	alert.Header = "Database Connection Failed"
 //	alert.Text = "Unable to connect to production database"
 //	alert.SlackChannelID = "C12345678"
@@ -69,28 +69,28 @@
 //	alert.AutoResolveSeconds = 300
 //
 //	// Add fields
-//	alert.Fields = []*common.Field{
+//	alert.Fields = []*types\.Field{
 //	    {Title: "Host", Value: "db-prod-01"},
 //	    {Title: "Port", Value: "5432"},
 //	}
 //
 //	// Add escalation
-//	alert.Escalation = []*common.Escalation{
+//	alert.Escalation = []*types\.Escalation{
 //	    {
-//	        Severity:      common.AlertPanic,
+//	        Severity:      types\.AlertPanic,
 //	        DelaySeconds:  300,
 //	        SlackMentions: []string{"<!here>"},
 //	    },
 //	}
 //
 //	// Add webhook button
-//	alert.Webhooks = []*common.Webhook{
+//	alert.Webhooks = []*types\.Webhook{
 //	    {
 //	        ID:          "restart",
 //	        URL:         "https://example.com/webhook/restart",
 //	        ButtonText:  "Restart DB",
-//	        ButtonStyle: common.WebhookButtonStyleDanger,
-//	        AccessLevel: common.WebhookAccessLevelChannelAdmins,
+//	        ButtonStyle: types\.WebhookButtonStyleDanger,
+//	        AccessLevel: types\.WebhookAccessLevelChannelAdmins,
 //	    },
 //	}
 //
@@ -99,4 +99,4 @@
 //	if err := alert.Validate(); err != nil {
 //	    panic(err)
 //	}
-package common
+package types

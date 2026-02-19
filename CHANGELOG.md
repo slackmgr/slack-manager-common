@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-02-19
+
+### Changed
+- Rename repository from `slack-manager-common` to `types`: update module path to `github.com/slackmgr/types`, all import paths, README badges/links, and CHANGELOG comparison links
+- Rename Go package from `common` to `types`: consumers must update `common.Xxx` references to `types.Xxx` (**breaking**)
+- Update README usage example to use `types.` package prefix
+
 ## [0.2.2] - 2026-02-19
 
 ### Changed
@@ -47,8 +54,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 See git history for changes in v0.1.4 and earlier versions.
 
-[Unreleased]: https://github.com/slackmgr/slack-manager-common/compare/v0.2.2...HEAD
-[0.2.2]: https://github.com/slackmgr/slack-manager-common/compare/v0.2.1...v0.2.2
-[0.2.1]: https://github.com/slackmgr/slack-manager-common/compare/v0.2.0...v0.2.1
-[0.2.0]: https://github.com/slackmgr/slack-manager-common/compare/v0.1.4...v0.2.0
-[0.1.4]: https://github.com/slackmgr/slack-manager-common/releases/tag/v0.1.4
+[Unreleased]: https://github.com/slackmgr/types/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/slackmgr/types/compare/v0.2.2...v0.3.0
+[0.2.2]: https://github.com/slackmgr/types/compare/v0.2.1...v0.2.2
+[0.2.1]: https://github.com/slackmgr/types/compare/v0.2.0...v0.2.1
+[0.2.0]: https://github.com/slackmgr/types/compare/v0.1.4...v0.2.0
+[0.1.4]: https://github.com/slackmgr/types/releases/tag/v0.1.4

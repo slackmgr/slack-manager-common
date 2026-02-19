@@ -1,9 +1,9 @@
-# slack-manager-common
+# types
 
-[![Go Reference](https://pkg.go.dev/badge/github.com/slackmgr/slack-manager-common.svg)](https://pkg.go.dev/github.com/slackmgr/slack-manager-common)
-[![Go Report Card](https://goreportcard.com/badge/github.com/slackmgr/slack-manager-common)](https://goreportcard.com/report/github.com/slackmgr/slack-manager-common)
+[![Go Reference](https://pkg.go.dev/badge/github.com/slackmgr/types.svg)](https://pkg.go.dev/github.com/slackmgr/types)
+[![Go Report Card](https://goreportcard.com/badge/github.com/slackmgr/types)](https://goreportcard.com/report/github.com/slackmgr/types)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![CI](https://github.com/slackmgr/slack-manager-common/workflows/CI/badge.svg)](https://github.com/slackmgr/slack-manager-common/actions)
+[![CI](https://github.com/slackmgr/types/workflows/CI/badge.svg)](https://github.com/slackmgr/types/actions)
 
 A Go shared library package providing common interfaces and data structures for the Slack Manager system. This package defines contracts for database access, logging, metrics, and core domain types like alerts and issues.
 
@@ -25,7 +25,7 @@ For sending alerts to Slack Manager, use the [Go Client](https://github.com/slac
 
 ## Overview
 
-The `slack-manager-common` package serves as the foundation for the Slack Manager ecosystem, providing:
+The `types` package serves as the foundation for the Slack Manager ecosystem, providing:
 
 - **Dependency Injection Interfaces**: Abstractions for database, logging, and metrics that allow implementations to be plugged in
 - **Core Domain Types**: Rich type definitions for alerts, issues, webhooks, and escalations
@@ -37,7 +37,7 @@ This library is used by the main [Slack Manager](https://github.com/slackmgr/sla
 ## Installation
 
 ```bash
-go get github.com/slackmgr/slack-manager-common
+go get github.com/slackmgr/types
 ```
 
 ## Core Interfaces
@@ -334,7 +334,7 @@ Maximum 20 fields per alert.
 The `dbtests` package provides a shared test suite that can be run against any `DB` implementation:
 
 ```go
-import "github.com/slackmgr/slack-manager-common/dbtests"
+import "github.com/slackmgr/types/dbtests"
 
 // In your database implementation tests:
 func TestDatabaseCompliance(t *testing.T) {
@@ -359,12 +359,12 @@ For testing purposes, no-op implementations are provided:
 package main
 
 import (
-    "github.com/slackmgr/slack-manager-common"
+    "github.com/slackmgr/types"
 )
 
 func main() {
     // Create an alert
-    alert := common.NewErrorAlert()
+    alert := types.NewErrorAlert()
     alert.Header = "Database Connection Failed"
     alert.Text = "Unable to connect to production database. Error: connection timeout"
     alert.SlackChannelID = "C12345678"
@@ -372,28 +372,28 @@ func main() {
     alert.AutoResolveSeconds = 300 // Auto-resolve after 5 minutes
 
     // Add fields
-    alert.Fields = []*common.Field{
+    alert.Fields = []*types.Field{
         {Title: "Host", Value: "db-prod-01"},
         {Title: "Port", Value: "5432"},
     }
 
     // Add escalation
-    alert.Escalation = []*common.Escalation{
+    alert.Escalation = []*types.Escalation{
         {
-            Severity:      common.AlertPanic,
+            Severity:      types.AlertPanic,
             DelaySeconds:  300,
             SlackMentions: []string{"<!here>"},
         },
     }
 
     // Add webhook button
-    alert.Webhooks = []*common.Webhook{
+    alert.Webhooks = []*types.Webhook{
         {
-            ID:          "restart",
-            URL:         "https://example.com/webhook/restart",
-            ButtonText:  "Restart DB",
-            ButtonStyle: common.WebhookButtonStyleDanger,
-            AccessLevel: common.WebhookAccessLevelChannelAdmins,
+            ID:               "restart",
+            URL:              "https://example.com/webhook/restart",
+            ButtonText:       "Restart DB",
+            ButtonStyle:      types.WebhookButtonStyleDanger,
+            AccessLevel:      types.WebhookAccessLevelChannelAdmins,
             ConfirmationText: "Are you sure you want to restart the database?",
             Payload: map[string]any{
                 "action": "restart_database",

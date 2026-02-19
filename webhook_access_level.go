@@ -1,4 +1,4 @@
-package common
+package types
 
 // WebhookAccessLevel is the access level required to invoke a webhook.
 type WebhookAccessLevel string

@@ -1,4 +1,4 @@
-package common
+package types
 
 // WebhookDisplayMode represents a display mode for a webhook button.
 type WebhookDisplayMode string

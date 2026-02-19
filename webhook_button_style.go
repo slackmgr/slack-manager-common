@@ -1,4 +1,4 @@
-package common
+package types
 
 // WebhookButtonStyle represents a webhook button style.
 type WebhookButtonStyle string

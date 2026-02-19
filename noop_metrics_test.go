@@ -1,16 +1,16 @@
-package common_test
+package types_test
 
 import (
 	"testing"
 
-	common "github.com/slackmgr/slack-manager-common"
+	"github.com/slackmgr/types"
 )
 
 func TestNoopMetrics(t *testing.T) {
 	t.Parallel()
 
 	// Ensure NoopMetrics implements the Metrics interface
-	var m common.Metrics = &common.NoopMetrics{}
+	var m types.Metrics = &types.NoopMetrics{}
 
 	// Ensure methods can be called without errors or panics
 	m.RegisterCounter("", "")

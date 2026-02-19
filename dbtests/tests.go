@@ -11,12 +11,12 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	common "github.com/slackmgr/slack-manager-common"
+	"github.com/slackmgr/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-// Package dbtests provides a comprehensive test suite for common.DB implementations.
+// Package dbtests provides a comprehensive test suite for types.DB implementations.
 //
 // Usage in your database plugin:
 //
@@ -41,7 +41,7 @@ import (
 // All tests clean up after themselves where possible, but some tests
 // use DropAllData() to ensure a clean state before running.
 
-func TestSaveAlert(t *testing.T, client common.DB) {
+func TestSaveAlert(t *testing.T, client types.DB) {
 	ctx := context.Background()
 
 	alert1 := newTestAlert("C0ABABABAB", uuid.New().String())
@@ -61,7 +61,7 @@ func TestSaveAlert(t *testing.T, client common.DB) {
 	require.Error(t, err, "should fail to save nil alert")
 }
 
-func TestSaveIssue(t *testing.T, client common.DB) {
+func TestSaveIssue(t *testing.T, client types.DB) {
 	ctx := context.Background()
 	channel := "C0ABABABAB"
 	require := require.New(t)
@@ -110,7 +110,7 @@ func TestSaveIssue(t *testing.T, client common.DB) {
 	assert.Equal(t, issue1.SlackPostID, foundIssue.SlackPostID, "SlackPostID should match after saving")
 }
 
-func TestMoveIssue(t *testing.T, client common.DB) {
+func TestMoveIssue(t *testing.T, client types.DB) {
 	ctx := context.Background()
 	channel1 := "C0ABABABAB"
 	channel2 := "C0ABABABAC"
@@ -160,7 +160,7 @@ func TestMoveIssue(t *testing.T, client common.DB) {
 	assert.NotNil(issueBody, "should find issue body in new channel after moving")
 }
 
-func TestFindOpenIssueByCorrelationID(t *testing.T, client common.DB) {
+func TestFindOpenIssueByCorrelationID(t *testing.T, client types.DB) {
 	ctx := context.Background()
 	channel := "C0ABABABAB"
 	assert := assert.New(t)
@@ -213,7 +213,7 @@ func TestFindOpenIssueByCorrelationID(t *testing.T, client common.DB) {
 	assert.Nil(issueBody, "should not find archived issue by correlation ID")
 }
 
-func TestFindIssueBySlackPostID(t *testing.T, client common.DB) {
+func TestFindIssueBySlackPostID(t *testing.T, client types.DB) {
 	ctx := context.Background()
 	channel := "C0ABABABAB"
 	assert := assert.New(t)
@@ -275,7 +275,7 @@ func TestFindIssueBySlackPostID(t *testing.T, client common.DB) {
 	assert.Equal(issue.SlackPostID, foundIssue.SlackPostID)
 }
 
-func TestSaveIssues(t *testing.T, client common.DB) {
+func TestSaveIssues(t *testing.T, client types.DB) {
 	ctx := context.Background()
 	channel := "C0ABABABAB"
 	assert := assert.New(t)
@@ -305,7 +305,7 @@ func TestSaveIssues(t *testing.T, client common.DB) {
 	assert.Len(issues, 3, "should have 3 issues after saving")
 }
 
-func TestFindActiveChannels(t *testing.T, client common.DB) {
+func TestFindActiveChannels(t *testing.T, client types.DB) {
 	ctx := context.Background()
 	channel1 := "C0ABABABAB"
 	channel2 := "C0ABABABAC"
@@ -349,7 +349,7 @@ func TestFindActiveChannels(t *testing.T, client common.DB) {
 	assert.Len(issues, 1, "should have 1 active channel after archiving all issues in channel1 and channel2")
 }
 
-func TestLoadOpenIssuesInChannel(t *testing.T, client common.DB) {
+func TestLoadOpenIssuesInChannel(t *testing.T, client types.DB) {
 	ctx := context.Background()
 	channel1 := "C0ABABABAB"
 	channel2 := "C0ABABABAC"
@@ -397,7 +397,7 @@ func TestLoadOpenIssuesInChannel(t *testing.T, client common.DB) {
 	assert.Empty(issues, "should have 0 open issues in channel2 after archiving all")
 }
 
-func TestCreatingAndFindingMoveMappings(t *testing.T, client common.DB) {
+func TestCreatingAndFindingMoveMappings(t *testing.T, client types.DB) {
 	ctx := context.Background()
 	assert := assert.New(t)
 	require := require.New(t)
@@ -454,7 +454,7 @@ func TestCreatingAndFindingMoveMappings(t *testing.T, client common.DB) {
 	assert.Nil(moveMappingBody, "should not find move mapping with invalid correlation ID")
 }
 
-func TestDeletingMoveMappings(t *testing.T, client common.DB) {
+func TestDeletingMoveMappings(t *testing.T, client types.DB) {
 	ctx := context.Background()
 	assert := assert.New(t)
 	require := require.New(t)
@@ -486,7 +486,7 @@ func TestDeletingMoveMappings(t *testing.T, client common.DB) {
 	require.NoError(err, "should not error when deleting non-existent move mapping")
 }
 
-func TestCreatingAndFindingChannelProcessingState(t *testing.T, client common.DB) {
+func TestCreatingAndFindingChannelProcessingState(t *testing.T, client types.DB) {
 	ctx := context.Background()
 	assert := assert.New(t)
 	require := require.New(t)
@@ -494,7 +494,7 @@ func TestCreatingAndFindingChannelProcessingState(t *testing.T, client common.DB
 	now := time.Now()
 
 	// Create a new channel processing state
-	state := common.NewChannelProcessingState(channelID)
+	state := types.NewChannelProcessingState(channelID)
 	state.LastProcessed = now
 
 	err := client.SaveChannelProcessingState(ctx, state)
@@ -523,7 +523,7 @@ func TestCreatingAndFindingChannelProcessingState(t *testing.T, client common.DB
 
 // TestInit verifies that database initialization works correctly.
 // It tests basic initialization and idempotent calls.
-func TestInit(t *testing.T, client common.DB) {
+func TestInit(t *testing.T, client types.DB) {
 	ctx := context.Background()
 	require := require.New(t)
 
@@ -537,7 +537,7 @@ func TestInit(t *testing.T, client common.DB) {
 }
 
 // TestInit_WithSchemaValidation verifies initialization with schema validation enabled.
-func TestInit_WithSchemaValidation(t *testing.T, client common.DB) {
+func TestInit_WithSchemaValidation(t *testing.T, client types.DB) {
 	ctx := context.Background()
 	require := require.New(t)
 
@@ -556,7 +556,7 @@ func TestInit_WithSchemaValidation(t *testing.T, client common.DB) {
 }
 
 // TestMoveIssue_EdgeCases tests edge cases for moving issues between channels.
-func TestMoveIssue_EdgeCases(t *testing.T, client common.DB) {
+func TestMoveIssue_EdgeCases(t *testing.T, client types.DB) {
 	ctx := context.Background()
 	channel1 := "C0ABABABAB"
 	channel2 := "C0ABABABAC"
@@ -609,7 +609,7 @@ func TestMoveIssue_EdgeCases(t *testing.T, client common.DB) {
 }
 
 // TestConcurrentSaveIssue tests concurrent writes to the same issue.
-func TestConcurrentSaveIssue(t *testing.T, client common.DB) {
+func TestConcurrentSaveIssue(t *testing.T, client types.DB) {
 	ctx := context.Background()
 	channel := "C0ABABABAB"
 	corr := uuid.New().String()
@@ -654,7 +654,7 @@ func TestConcurrentSaveIssue(t *testing.T, client common.DB) {
 }
 
 // TestConcurrentMoveMapping tests concurrent move mapping operations.
-func TestConcurrentMoveMapping(t *testing.T, client common.DB) {
+func TestConcurrentMoveMapping(t *testing.T, client types.DB) {
 	ctx := context.Background()
 	require := require.New(t)
 	const goroutines = 5
@@ -686,7 +686,7 @@ func TestConcurrentMoveMapping(t *testing.T, client common.DB) {
 }
 
 // TestLoadOpenIssuesInChannel_LargeDataset tests loading many issues from a channel.
-func TestLoadOpenIssuesInChannel_LargeDataset(t *testing.T, client common.DB) {
+func TestLoadOpenIssuesInChannel_LargeDataset(t *testing.T, client types.DB) {
 	ctx := context.Background()
 	channel := "C0ABABABAB"
 	require := require.New(t)
@@ -700,7 +700,7 @@ func TestLoadOpenIssuesInChannel_LargeDataset(t *testing.T, client common.DB) {
 
 	// Create 100 issues
 	const issueCount = 100
-	issues := make([]common.Issue, issueCount)
+	issues := make([]types.Issue, issueCount)
 	expectedIDs := make(map[string]bool)
 
 	for i := range issueCount {
@@ -726,7 +726,7 @@ func TestLoadOpenIssuesInChannel_LargeDataset(t *testing.T, client common.DB) {
 }
 
 // TestFindActiveChannels_ManyChannels tests finding active channels with many channels.
-func TestFindActiveChannels_ManyChannels(t *testing.T, client common.DB) {
+func TestFindActiveChannels_ManyChannels(t *testing.T, client types.DB) {
 	ctx := context.Background()
 	require := require.New(t)
 	assert := assert.New(t)
@@ -763,7 +763,7 @@ func TestFindActiveChannels_ManyChannels(t *testing.T, client common.DB) {
 }
 
 // TestSpecialCharactersInCorrelationID tests handling of special characters.
-func TestSpecialCharactersInCorrelationID(t *testing.T, client common.DB) {
+func TestSpecialCharactersInCorrelationID(t *testing.T, client types.DB) {
 	ctx := context.Background()
 	channel := "C0ABABABAB"
 
@@ -808,7 +808,7 @@ func TestSpecialCharactersInCorrelationID(t *testing.T, client common.DB) {
 }
 
 // TestChannelProcessingState_EdgeCases tests edge cases for channel processing state.
-func TestChannelProcessingState_EdgeCases(t *testing.T, client common.DB) {
+func TestChannelProcessingState_EdgeCases(t *testing.T, client types.DB) {
 	ctx := context.Background()
 
 	t.Run("nil state", func(t *testing.T) {
@@ -822,7 +822,7 @@ func TestChannelProcessingState_EdgeCases(t *testing.T, client common.DB) {
 		assert := assert.New(t)
 
 		channelID := "C" + uuid.New().String()[:10]
-		state := common.NewChannelProcessingState(channelID)
+		state := types.NewChannelProcessingState(channelID)
 		state.OpenIssues = 10000
 
 		err := client.SaveChannelProcessingState(ctx, state)
@@ -839,7 +839,7 @@ func TestChannelProcessingState_EdgeCases(t *testing.T, client common.DB) {
 
 		channelID := "C" + uuid.New().String()[:10]
 		now := time.Now().UTC()
-		state := common.NewChannelProcessingState(channelID)
+		state := types.NewChannelProcessingState(channelID)
 		state.LastProcessed = now
 
 		err := client.SaveChannelProcessingState(ctx, state)
@@ -854,7 +854,7 @@ func TestChannelProcessingState_EdgeCases(t *testing.T, client common.DB) {
 }
 
 // TestSaveIssue_ComplexAlert tests saving issues with complex alert data.
-func TestSaveIssue_ComplexAlert(t *testing.T, client common.DB) {
+func TestSaveIssue_ComplexAlert(t *testing.T, client types.DB) {
 	ctx := context.Background()
 	channel := "C0ABABABAB"
 	corr := uuid.New().String()
@@ -882,7 +882,7 @@ func TestSaveIssue_ComplexAlert(t *testing.T, client common.DB) {
 }
 
 // TestContextCancellation tests that operations respect context cancellation.
-func TestContextCancellation(t *testing.T, client common.DB) {
+func TestContextCancellation(t *testing.T, client types.DB) {
 	t.Run("canceled context for FindOpenIssueByCorrelationID", func(t *testing.T) {
 		ctx, cancel := context.WithCancel(context.Background())
 		cancel() // Cancel immediately
@@ -898,7 +898,7 @@ func TestContextCancellation(t *testing.T, client common.DB) {
 
 // RunAllTests runs all database compliance tests.
 // This is a convenience function for plugin implementations.
-func RunAllTests(t *testing.T, client common.DB) {
+func RunAllTests(t *testing.T, client types.DB) {
 	t.Helper()
 	// Initialize database
 	ctx := context.Background()
@@ -942,15 +942,15 @@ func RunAllTests(t *testing.T, client common.DB) {
 }
 
 type testIssue struct {
-	ID            string        `json:"id"`
-	CorrelationID string        `json:"correlationId"`
-	LastAlert     *common.Alert `json:"lastAlert"`
-	Archived      bool          `json:"archived"`
-	SlackPostID   string        `json:"slackPostId"`
+	ID            string       `json:"id"`
+	CorrelationID string       `json:"correlationId"`
+	LastAlert     *types.Alert `json:"lastAlert"`
+	Archived      bool         `json:"archived"`
+	SlackPostID   string       `json:"slackPostId"`
 }
 
-func newTestAlert(channelID, correlationID string) *common.Alert {
-	alert := common.NewErrorAlert()
+func newTestAlert(channelID, correlationID string) *types.Alert {
+	alert := types.NewErrorAlert()
 	alert.SlackChannelID = channelID
 	alert.CorrelationID = correlationID
 	alert.Header = "Test Alert"
@@ -958,7 +958,7 @@ func newTestAlert(channelID, correlationID string) *common.Alert {
 	return alert
 }
 
-func newTestIssue(alert *common.Alert, slackPostID string) *testIssue {
+func newTestIssue(alert *types.Alert, slackPostID string) *testIssue {
 	return &testIssue{
 		ID:            alert.CorrelationID + alert.SlackChannelID + time.Now().UTC().Format(time.RFC3339Nano),
 		CorrelationID: alert.CorrelationID,
@@ -1069,8 +1069,8 @@ func moveMappingFromJSON(data []byte) *testMoveMapping {
 
 // newTestAlertWithAllFields creates a test alert with all fields populated.
 // This is useful for testing JSON serialization and ensuring no data is lost.
-func newTestAlertWithAllFields(channelID, correlationID string) *common.Alert {
-	alert := common.NewErrorAlert()
+func newTestAlertWithAllFields(channelID, correlationID string) *types.Alert {
+	alert := types.NewErrorAlert()
 	alert.SlackChannelID = channelID
 	alert.CorrelationID = correlationID
 	alert.Header = "Test Alert with All Fields"
@@ -1089,33 +1089,33 @@ func newTestAlertWithAllFields(channelID, correlationID string) *common.Alert {
 	alert.AutoResolveSeconds = 300
 	alert.NotificationDelaySeconds = 10
 	alert.ArchivingDelaySeconds = 60
-	alert.Severity = common.AlertError
+	alert.Severity = types.AlertError
 
 	// Add fields
-	alert.Fields = []*common.Field{
+	alert.Fields = []*types.Field{
 		{Title: "Environment", Value: "production"},
 		{Title: "Service", Value: "api-gateway"},
 		{Title: "Region", Value: "us-east-1"},
 	}
 
 	// Add escalation
-	alert.Escalation = []*common.Escalation{
+	alert.Escalation = []*types.Escalation{
 		{
-			Severity:      common.AlertPanic,
+			Severity:      types.AlertPanic,
 			DelaySeconds:  300,
 			SlackMentions: []string{"<!here>"},
 		},
 	}
 
 	// Add webhooks
-	alert.Webhooks = []*common.Webhook{
+	alert.Webhooks = []*types.Webhook{
 		{
 			ID:               "restart",
 			URL:              "https://example.com/webhook/restart",
 			ButtonText:       "Restart Service",
-			ButtonStyle:      common.WebhookButtonStyleDanger,
-			AccessLevel:      common.WebhookAccessLevelChannelAdmins,
-			DisplayMode:      common.WebhookDisplayModeOpenIssue,
+			ButtonStyle:      types.WebhookButtonStyleDanger,
+			AccessLevel:      types.WebhookAccessLevelChannelAdmins,
+			DisplayMode:      types.WebhookDisplayModeOpenIssue,
 			ConfirmationText: "Are you sure?",
 			Payload: map[string]any{
 				"action": "restart",

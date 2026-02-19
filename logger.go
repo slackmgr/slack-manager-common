@@ -1,4 +1,4 @@
-package common
+package types
 
 type Logger interface {
 	Debug(msg string)

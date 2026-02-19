@@ -1,4 +1,4 @@
-package common
+package types
 
 type Metrics interface {
 	// RegisterCounter registers a counter metric with the given name, help text, and optional labels.
